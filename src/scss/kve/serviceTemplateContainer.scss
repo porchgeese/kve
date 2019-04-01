@@ -1,0 +1,38 @@
+@import "../globals/globals";
+
+$kve-service-template-height: 50px;
+$kve-template-container-border-width: 1px;
+$kve-template-container-margin: 3px;
+$kve-template-container-grid-size: 2;
+$kve-service-template-width: 100%/$kve-template-container-grid-size;
+
+
+.service-template-container {
+  width: 30%;
+}
+
+.service-template {
+  background-color: $background-color;
+  display: inline-block;
+  margin: $kve-template-container-margin;
+  width: calc(#{$kve-service-template-width} - #{2*$kve-template-container-border-width} - #{2*$kve-template-container-margin});
+  border: $kve-template-container-border-width solid $accent-color;
+  text-align: center;
+  height: $kve-service-template-height;
+  line-height: $kve-service-template-height;
+  user-select: none;
+  box-shadow: $kve-template-container-margin $kve-template-container-margin 4px 0px $accent-color;
+  text-transform: lowercase;
+  cursor: move;
+}
+
+.draggable-elem {
+  opacity: 0.4;
+}
+
+.draggable-elem .service-template {
+  width: 100%;
+}
+.service-template:active {
+  background-color: red;
+}

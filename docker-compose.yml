@@ -4,10 +4,10 @@ services:
     build: .
     volumes:
     - .:/app
-    - elm-data:/root/.elm
+    - ./node_modules:/ignore
+    - ./elm-stuff:/ignore
     ports:
-      - 8000:8000
-    command: elm reactor
-volumes:
-  elm-data:
+      - 9000:9000
+    command: npm run dev:full
+
 

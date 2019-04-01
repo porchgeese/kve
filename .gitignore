@@ -1,2 +1,4 @@
-elm-stuff
 .idea
+elm-stuff
+dist
+node_modules

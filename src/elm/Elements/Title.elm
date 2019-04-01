@@ -1,4 +1,4 @@
-module Elements.Html.Title exposing (view,Title)
+module Elements.Title exposing (view,Title)
 import Html exposing (..)
 
 
