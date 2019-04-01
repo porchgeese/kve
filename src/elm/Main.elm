@@ -14,7 +14,9 @@ import Task
 import Result
 import Modules.Kve.DraggableManager as DM
 import Maybe.Extra exposing (toList)
-
+import Browser.Events exposing (onMouseMove,onMouseUp)
+import Json.Decode as Decode
+import Browser.Dom exposing (Error)
 import Browser.Dom exposing (Error)
 import Debug
 type alias Model = {
@@ -59,9 +61,15 @@ update msg model =
             (model, Task.attempt(handleServiceSelected(details))(getElement(details.service.id)))
            ServiceSelectedAndDim details ->
             ({model | selection = Just (ServiceSelectedAndDim {service = details.service, position = details.position, element = details.element}) }, Cmd.none)
+           MouseMove position ->
+            ({model | selection = (getNewSelection model.selection position.position)}, Cmd.none)
+           MouseUp ->
+             ({model | selection = Nothing}, Cmd.none)
            EventError e ->
              Debug.log(e.description)
              (model, Cmd.none)
+
+
 
 renderDrag: Events -> Maybe (Html Events)
 renderDrag model =
@@ -77,12 +85,33 @@ renderDrag model =
 render: Model -> Html  Events
 render model = div[](TemplateContainer.render(model.sideBar) :: (Maybe.andThen renderDrag model.selection |> toList))
 
+getNewSelection: Maybe Events -> PxPosition  -> Maybe Events
+getNewSelection model position =
+       case model of
+           Just(ServiceSelectedAndDim details) ->
+            Just (ServiceSelectedAndDim {details | position = position})
+           _ ->
+            Nothing
+
+
+decodeMousePosition: Decode.Decoder Events
+decodeMousePosition =
+    Decode.map2
+      (\x y -> MouseMove {position = PxPosition(x)(y)})
+      (Decode.field "clientX" Decode.float)
+      (Decode.field "clientY" Decode.float)
+
+decodeMouseUp: Decode.Decoder Events
+decodeMouseUp =
+    Decode.succeed MouseUp
 
 
 
 subscriptions: Model -> Sub Events
-subscriptions _ = Sub.none
-
+subscriptions _ = Sub.batch [
+        (onMouseMove decodeMousePosition),
+        (onMouseUp decodeMouseUp)
+    ]
 
 main = Browser.document {
     init = init,

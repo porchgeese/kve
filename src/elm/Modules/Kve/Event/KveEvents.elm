@@ -7,5 +7,7 @@ import Browser.Dom exposing (Element)
 type Events =
     ServiceSelected {service: ServiceTemplate, position: PxPosition} |
     ServiceSelectedAndDim {service: ServiceTemplate, position: PxPosition, element: Element} |
+    MouseMove {position: PxPosition} |
+    MouseUp  |
     EventError {description: String}
 

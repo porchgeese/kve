@@ -34,5 +34,6 @@ $kve-service-template-width: 100%/$kve-template-container-grid-size;
   width: 100%;
 }
 .service-template:active {
-  background-color: red;
+  border-color: darkslategray;
+  transform: scale(1.05);
 }
