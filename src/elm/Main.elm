@@ -3,7 +3,7 @@ import Browser
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
 import Modules.Kve.ServiceTemplateContainer
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
+import Modules.Kve.Model.KveModel exposing (Service)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
@@ -18,7 +18,7 @@ import Modules.Kve.ServicesArea as RunningServices
 
 type alias Model = {
     templateContainer: ServiceTemplateContainer.Model,
-    dragManager: DraggableManager.Model ServiceTemplate,
+    dragManager: DraggableManager.Model Service,
     serviceArea: RunningServices.Model
  }
 
@@ -43,32 +43,29 @@ init _ =
     serviceArea = serviceArea
  }, Cmd.batch([serviceAreaCmd, dragManagerCmd]))
 
-handleServiceSelected : Model -> PxPosition -> ServiceTemplate -> (Model, Cmd Events)
+handleServiceSelected : Model -> PxPosition -> Service -> (Model, Cmd Events)
 handleServiceSelected model position service =
     let
         (newDrag, dragSubs) = DraggableManager.dragStarted(model.dragManager)(service)(position)(service.id)
         (newServ, serSubs) = RunningServices.handleDragStart(position)(model.serviceArea)
-        modelWNewDrag = {model | dragManager = newDrag}
-        modelWNewServ = {modelWNewDrag | serviceArea = newServ}
-    in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
+        newModel = {model | serviceArea = newServ, dragManager = newDrag}
+    in (newModel, Cmd.batch [dragSubs, serSubs])
 
 handleMouseMove:  Model -> PxPosition -> (Model, Cmd Events)
 handleMouseMove model position =
     let
         (newDrag, dragSubs) = DraggableManager.handleMouseMove(position)(model.dragManager)
         (newServ, serSubs) = RunningServices.handleMouseMove(position)(model.serviceArea)
-        modelWNewDrag = {model | dragManager = newDrag}
-        modelWNewServ = {modelWNewDrag | serviceArea = newServ}
-    in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
+        newModel = {model | dragManager = newDrag, serviceArea = newServ}
+    in (newModel, Cmd.batch [dragSubs, serSubs])
 
 handleMouseUp: Model -> (Model, Cmd Events)
 handleMouseUp model  =
      let
        (newDrag, dragSubs) = DraggableManager.dragOver(model.dragManager)
        (newServ, serSubs) = RunningServices.handleDragStop(model.serviceArea)
-       modelWNewDrag = {model | dragManager = newDrag}
-       modelWNewServ = {modelWNewDrag | serviceArea = newServ}
-     in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
+       newModel = {model | dragManager = newDrag, serviceArea = newServ}
+     in (newModel, Cmd.batch [dragSubs, serSubs])
 
 handleDimensions:  Model -> PxDimensions -> (Model, Cmd Events)
 handleDimensions model dimensions =
@@ -78,9 +75,7 @@ handleDimensions model dimensions =
 handleServiceAreaElement: Model -> Element -> (Model, Cmd Events)
 handleServiceAreaElement model element =
     let (newServiceArea, cmd) = RunningServices.handleServiceArea(element)(model.serviceArea)
-    in
-        Debug.log(Debug.toString(element))
-        ({model | serviceArea = newServiceArea },cmd)
+    in  ({model | serviceArea = newServiceArea },cmd)
 
 update : Events -> Model -> (Model, Cmd Events)
 update msg model =

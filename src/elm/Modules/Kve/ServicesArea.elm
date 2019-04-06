@@ -4,14 +4,14 @@ import Html.Attributes exposing (class,id)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
 import Modules.Kve.Decoder.Mouse exposing (decodeMouseUp, decodeMousePosition)
 import Model.PxPosition exposing (PxPosition)
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
+import Modules.Kve.Model.KveModel exposing (Service)
 import Browser.Events exposing (onMouseMove,onMouseUp)
 import Browser.Dom exposing (getElement, Element)
 import Task
 import Result
 type alias Model = {
     ongoingDrag: Maybe PxPosition,
-    services: List ServiceTemplate,
+    services: List Service,
     hover: Bool,
     dimensions: Element
  }
@@ -42,7 +42,7 @@ handleServiceArea element model = ({ model | dimensions = element}, Cmd.none)
 
 handleDragStart: PxPosition -> Model -> (Model, Cmd Events)
 handleDragStart pxPosition model =
-    ({model | ongoingDrag = Just(pxPosition)}, elementDimensions("service-area"))
+    ({model | ongoingDrag = Just(pxPosition), hover = False}, elementDimensions("service-area"))
 
 handleDragStop: Model -> (Model, Cmd Events)
 handleDragStop model =
@@ -51,16 +51,16 @@ handleDragStop model =
 handleMouseMove: PxPosition -> Model -> (Model, Cmd Events)
 handleMouseMove pxPosition model =
      let
-        inViewPortY = model.dimensions.element.y - model.dimensions.viewport.y > 0
-        inViewPortX = model.dimensions.element.x - model.dimensions.viewport.x > 0
-        mouseInY    = inViewPortY &&
-            model.dimensions.element.y - model.dimensions.viewport.y - pxPosition.y + model.dimensions.element.height > 0
-        mouseInX    = inViewPortX &&
-            model.dimensions.element.x - model.dimensions.viewport.x - pxPosition.x + model.dimensions.element.width > 0
+        squareL = model.dimensions.element.x - model.dimensions.viewport.x
+        squareR = squareL + model.dimensions.element.width
+        squareT = model.dimensions.element.y - model.dimensions.viewport.y
+        squareB = squareT + model.dimensions.element.height
+        mouseInX    = pxPosition.x < squareR && pxPosition.x > squareL
+        mouseInY    = pxPosition.y < squareB && pxPosition.y > squareT
         newModelWHover = {model | hover = mouseInX && mouseInY}
         newModelWPosition = {newModelWHover | ongoingDrag = Just(pxPosition)}
     in
-    Debug.log(Debug.toString(newModelWPosition))
+    Debug.log(String.fromFloat(squareL))
     (newModelWPosition, Cmd.none)
 
 

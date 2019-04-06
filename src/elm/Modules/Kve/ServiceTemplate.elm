@@ -6,16 +6,16 @@ import Json.Decode as Json exposing (..)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxPosition exposing (PxPosition)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
+import Modules.Kve.Model.KveModel exposing (Service)
 
-decodeServiceSelected: ServiceTemplate -> (Json.Decoder (Events, Bool))
+decodeServiceSelected: Service -> (Json.Decoder (Events, Bool))
 decodeServiceSelected service =
     Json.map2
      (\x y -> (ServiceSelected(service)(PxPosition(x)(y)), True))
      (field "pageX" float)
      (field "pageY" float)
 
-render: ServiceTemplate -> Html Events
+render: Service -> Html Events
 render service = div[
     stopPropagationOn "mousedown" (decodeServiceSelected(service)),
     class  "service-template",

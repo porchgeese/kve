@@ -1,3 +1,3 @@
 module Modules.Kve.Model.KveModel exposing (..)
 
-type alias ServiceTemplate = {id: String, name: String}
+type alias Service = {id: String, name: String}
