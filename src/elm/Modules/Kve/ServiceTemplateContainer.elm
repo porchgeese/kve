@@ -1,4 +1,4 @@
-module Modules.Kve.ServiceTemplateContainer exposing (render,ServiceTemplateContainer, ServiceContainer)
+module Modules.Kve.ServiceTemplateContainer exposing (render,Model)
 import Elements.Title as Title
 import Html exposing (Html,div)
 import Html.Attributes exposing (class)
@@ -7,17 +7,12 @@ import Modules.Kve.Event.KveEvents exposing (Events)
 import Modules.Kve.ServiceTemplate as ST
 
 
-type alias ServiceTemplateContainer = {
-                            title : String,
-                            services: List Events
-                        }
-
-type alias ServiceContainer = {
+type alias Model = {
         title: String,
         serviceTemplates: List ServiceTemplate
     }
-render : ServiceContainer  -> Html Events
-render model = div
-    [
-        class "service-template-container"
-    ](Title.view({title = model.title}) :: (List.map ST.render model.serviceTemplates))
+render : Model  -> Html Events
+render model = div[class "service-template-container"][
+        div [class "service-template-container-title"][Title.view({title = model.title}) ],
+        div [class "service-template-container-items"](List.map ST.render model.serviceTemplates)
+    ]

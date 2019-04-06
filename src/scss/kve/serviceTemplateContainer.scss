@@ -2,26 +2,32 @@
 
 $kve-service-template-height: 50px;
 $kve-template-container-border-width: 1px;
-$kve-template-container-margin: 3px;
+$kve-template-row-margin: 10px;
+$kve-template-column-margin: 10px;
 $kve-template-container-grid-size: 2;
-$kve-service-template-width: 100%/$kve-template-container-grid-size;
-
 
 .service-template-container {
-  width: 30%;
+  height: 100%;
+  .service-template-container-title {
+
+  }
+  .service-template-container-items {
+    display: grid;
+    grid-template-columns: repeat($kve-template-container-grid-size,1fr);
+    grid-column-gap: $kve-template-column-margin;
+    grid-row-gap: $kve-template-row-margin;
+  }
 }
 
 .service-template {
   background-color: $background-color;
   display: inline-block;
-  margin: $kve-template-container-margin;
-  width: calc(#{$kve-service-template-width} - #{2*$kve-template-container-border-width} - #{2*$kve-template-container-margin});
+  width: 100%;
   border: $kve-template-container-border-width solid $accent-color;
   text-align: center;
   height: $kve-service-template-height;
   line-height: $kve-service-template-height;
   user-select: none;
-  box-shadow: $kve-template-container-margin $kve-template-container-margin 4px 0px $accent-color;
   text-transform: lowercase;
   cursor: move;
 }

@@ -1,116 +1,116 @@
 module Main exposing (main)
 import Browser
 import Html exposing (Html, div)
-import Modules.Kve.ServiceTemplateContainer as TemplateContainer
-import Modules.Kve.ServiceTemplate as ST
+import Html.Attributes exposing (class)
+import Modules.Kve.ServiceTemplateContainer
 import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
-import Model.PxDimensions as Dim
 import Platform.Sub
-import Browser.Dom exposing (getElement, Element)
-import Task
-import Result
-import Modules.Kve.DraggableManager as DM
-import Maybe.Extra exposing (toList)
-import Browser.Events exposing (onMouseMove,onMouseUp)
-import Json.Decode as Decode
-import Browser.Dom exposing (Error)
-import Browser.Dom exposing (Error)
 import Debug
+import Browser.Dom exposing (Element)
+import Modules.Kve.ServiceTemplateContainer
+import Modules.Kve.DraggableManager as DraggableManager
+import Modules.Kve.ServiceTemplateContainer as ServiceTemplateContainer
+import Modules.Kve.ServiceTemplate as ServiceTemplate
+import Modules.Kve.ServicesArea as RunningServices
+
 type alias Model = {
-    sideBar: {
-        title: String,
-        serviceTemplates: List ServiceTemplate
-    },
-        selection : Maybe Events
+    templateContainer: ServiceTemplateContainer.Model,
+    dragManager: DraggableManager.Model ServiceTemplate,
+    serviceArea: RunningServices.Model
  }
 
 init : () -> (Model, Cmd Events)
-init _ = ({
-        sideBar = {
-            title = "KVE - Kube Visual Editor",
-            serviceTemplates =[
-                {id = "1",name = "Service1"},
-                {id = "2",name = "Service2"},
-                {id = "3",name = "Service3"},
-                {id = "4",name = "Service4"},
-                {id = "5",name = "Service5"},
-                {id = "6",name = "Service6"}
-            ]
-        } ,
-        selection = Nothing
-        },
-        Cmd.none
- )
+init _ =
+    let (serviceArea, serviceAreaCmd) = RunningServices.init
+        (dragManager, dragManagerCmd) = DraggableManager.init(ServiceTemplate.render)
+    in (
+    {
+    templateContainer = {
+        title = "Kve - Visual Editor",
+        serviceTemplates = [
+            {id = "1",name = "Service1"},
+            {id = "2",name = "Service2"},
+            {id = "3",name = "Service3"},
+            {id = "4",name = "Service4"},
+            {id = "5",name = "Service5"},
+            {id = "6",name = "Service6"}
+        ]
+    },
+    dragManager = dragManager,
+    serviceArea = serviceArea
+ }, Cmd.batch([serviceAreaCmd, dragManagerCmd]))
 
-handleServiceSelected: ({service : ServiceTemplate, position : PxPosition}) -> (Result Error Element) -> Events
-handleServiceSelected details result =
-       case result of
-           Ok elem -> ServiceSelectedAndDim {service = details.service, position = details.position, element = elem}
-           Err _ -> EventError {description = "Failed to fetch element."}
+handleServiceSelected : Model -> PxPosition -> ServiceTemplate -> (Model, Cmd Events)
+handleServiceSelected model position service =
+    let
+        (newDrag, dragSubs) = DraggableManager.dragStarted(model.dragManager)(service)(position)(service.id)
+        (newServ, serSubs) = RunningServices.handleDragStart(position)(model.serviceArea)
+        modelWNewDrag = {model | dragManager = newDrag}
+        modelWNewServ = {modelWNewDrag | serviceArea = newServ}
+    in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
 
+handleMouseMove:  Model -> PxPosition -> (Model, Cmd Events)
+handleMouseMove model position =
+    let
+        (newDrag, dragSubs) = DraggableManager.handleMouseMove(position)(model.dragManager)
+        (newServ, serSubs) = RunningServices.handleMouseMove(position)(model.serviceArea)
+        modelWNewDrag = {model | dragManager = newDrag}
+        modelWNewServ = {modelWNewDrag | serviceArea = newServ}
+    in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
 
+handleMouseUp: Model -> (Model, Cmd Events)
+handleMouseUp model  =
+     let
+       (newDrag, dragSubs) = DraggableManager.dragOver(model.dragManager)
+       (newServ, serSubs) = RunningServices.handleDragStop(model.serviceArea)
+       modelWNewDrag = {model | dragManager = newDrag}
+       modelWNewServ = {modelWNewDrag | serviceArea = newServ}
+     in (modelWNewServ, Cmd.batch [dragSubs, serSubs])
 
+handleDimensions:  Model -> PxDimensions -> (Model, Cmd Events)
+handleDimensions model dimensions =
+    let (newModel, subs) = DraggableManager.handleDimensions(dimensions)(model.dragManager)
+    in ({model | dragManager = newModel}, subs)
+
+handleServiceAreaElement: Model -> Element -> (Model, Cmd Events)
+handleServiceAreaElement model element =
+    let (newServiceArea, cmd) = RunningServices.handleServiceArea(element)(model.serviceArea)
+    in
+        Debug.log(Debug.toString(element))
+        ({model | serviceArea = newServiceArea },cmd)
 
 update : Events -> Model -> (Model, Cmd Events)
 update msg model =
        case msg of
-           ServiceSelected details ->
-            (model, Task.attempt(handleServiceSelected(details))(getElement(details.service.id)))
-           ServiceSelectedAndDim details ->
-            ({model | selection = Just (ServiceSelectedAndDim {service = details.service, position = details.position, element = details.element}) }, Cmd.none)
+           ServiceSelected service position ->
+             handleServiceSelected model position service
            MouseMove position ->
-            ({model | selection = (getNewSelection model.selection position.position)}, Cmd.none)
+             handleMouseMove model position
+           SelectionDimensions dimensions ->
+              handleDimensions model dimensions
            MouseUp ->
-             ({model | selection = Nothing}, Cmd.none)
+             handleMouseUp model
+           ServiceAreaElement element ->
+             handleServiceAreaElement model element
            EventError e ->
-             Debug.log(e.description)
+             Debug.log(e)
              (model, Cmd.none)
 
-
-
-renderDrag: Events -> Maybe (Html Events)
-renderDrag model =
-   case model of
-       ServiceSelectedAndDim details ->
-         let de = DM.DraggableElement(ST.render)(details.service)(details.position)(Dim.fromElement(details.element))
-         in Just(DM.render(de))
-       _ ->
-         Nothing
-
-
-
 render: Model -> Html  Events
-render model = div[](TemplateContainer.render(model.sideBar) :: (Maybe.andThen renderDrag model.selection |> toList))
-
-getNewSelection: Maybe Events -> PxPosition  -> Maybe Events
-getNewSelection model position =
-       case model of
-           Just(ServiceSelectedAndDim details) ->
-            Just (ServiceSelectedAndDim {details | position = position})
-           _ ->
-            Nothing
-
-
-decodeMousePosition: Decode.Decoder Events
-decodeMousePosition =
-    Decode.map2
-      (\x y -> MouseMove {position = PxPosition(x)(y)})
-      (Decode.field "clientX" Decode.float)
-      (Decode.field "clientY" Decode.float)
-
-decodeMouseUp: Decode.Decoder Events
-decodeMouseUp =
-    Decode.succeed MouseUp
-
-
+render model = div[class "kve"][
+    ServiceTemplateContainer.render(model.templateContainer),
+    RunningServices.render(model.serviceArea),
+    DraggableManager.render(model.dragManager)
+    ]
 
 subscriptions: Model -> Sub Events
-subscriptions _ = Sub.batch [
-        (onMouseMove decodeMousePosition),
-        (onMouseUp decodeMouseUp)
+subscriptions model =
+    Sub.batch[
+        RunningServices.subscriptions(model.serviceArea),
+        DraggableManager.subscriptions(model.dragManager)
     ]
 
 main = Browser.document {

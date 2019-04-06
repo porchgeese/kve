@@ -11,15 +11,13 @@ import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
 decodeServiceSelected: ServiceTemplate -> (Json.Decoder (Events, Bool))
 decodeServiceSelected service =
     Json.map2
-     (\x y -> (ServiceSelected {service = service, position = PxPosition(x)(y)}, True))
+     (\x y -> (ServiceSelected(service)(PxPosition(x)(y)), True))
      (field "pageX" float)
      (field "pageY" float)
-
 
 render: ServiceTemplate -> Html Events
 render service = div[
     stopPropagationOn "mousedown" (decodeServiceSelected(service)),
     class  "service-template",
     id (service.id)
-    ][text(service.name)
-    ]
+    ][text(service.name)]

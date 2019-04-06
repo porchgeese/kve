@@ -1,0 +1,8 @@
+.kve {
+  @import "serviceTemplateContainer";
+  @import "runningServicesContainer";
+  display: grid;
+  grid-template-columns: 15% 85%;
+  height: 100%;
+  width: 100%;
+}

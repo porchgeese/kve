@@ -1,8 +1,10 @@
-@import "kve/serviceTemplateContainer";
+@import "kve/kve";
 @import "globals/globals";
 
 body {
   font-family: $roboto-slab;
   font-weight: normal;
+  min-height: 100vh;
+  display: flex;
 }
 
