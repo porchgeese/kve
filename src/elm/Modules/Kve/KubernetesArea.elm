@@ -1,11 +1,11 @@
-module Modules.Kve.KubernetesServiceArea exposing (..)
+module Modules.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div,text)
 import Html.Attributes exposing (class,id, style)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
 import Modules.Kve.Decoder.Mouse exposing (decodeMouseUp, decodeMousePosition)
 import Model.PxPosition exposing (PxPosition,toTranslateStr,relativePosition)
 import Modules.Kve.Model.KveModel exposing (Service)
-import Modules.Kve.ServiceTemplate as ServiceTemplate
+import Modules.Kve.KubernetesService as KubernetesService
 import Browser.Events exposing (onMouseMove,onMouseUp)
 import Browser.Dom exposing (getElement, Element)
 import Task
@@ -14,6 +14,7 @@ import Maybe.Extra as MaybeE
 
 type alias OngoingDrag = {position: PxPosition, elem: Service}
 type alias ServiceInKubernetes = {position: PxPosition, service: Service}
+type alias KubeServiceDimensions = {height: Float, width: Float}
 type alias Model = {
     ongoingDrag: Maybe OngoingDrag,
     services: List ServiceInKubernetes,
@@ -109,7 +110,7 @@ render model = div[
             (\service -> div[
                 class "kubernetes-service",
                 style "transform" (toTranslateStr(service.position))
-                ][ServiceTemplate.render(service.service)])
+                ][KubernetesService.render(service.service)])
     )
 
 

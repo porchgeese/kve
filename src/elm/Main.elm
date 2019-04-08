@@ -11,20 +11,20 @@ import Platform.Sub
 import Debug
 import Browser.Dom exposing (Element)
 import Modules.Kve.ServiceTemplateContainer
-import Modules.Kve.DraggableManager as DraggableManager
+import Modules.Kve.DragginInProgress as DraggableManager
 import Modules.Kve.ServiceTemplateContainer as ServiceTemplateContainer
 import Modules.Kve.ServiceTemplate as ServiceTemplate
-import Modules.Kve.KubernetesServiceArea as RunningServices
+import Modules.Kve.KubernetesArea as KubernetesArea
 
 type alias Model = {
     templateContainer: ServiceTemplateContainer.Model,
     dragManager: DraggableManager.Model Service,
-    serviceArea: RunningServices.Model
+    serviceArea: KubernetesArea.Model
  }
 
 init : () -> (Model, Cmd Events)
 init _ =
-    let (serviceArea, serviceAreaCmd) = RunningServices.init
+    let (serviceArea, serviceAreaCmd) = KubernetesArea.init
         (dragManager, dragManagerCmd) = DraggableManager.init(ServiceTemplate.render)
     in (
     {
@@ -56,7 +56,7 @@ handleServiceSelected : Model -> PxPosition -> Service -> (Model, Cmd Events)
 handleServiceSelected model position service =
     let
         (newDrag, dragSubs) = DraggableManager.dragStarted(model.dragManager)(service)(position)(service.id)
-        (newServ, serSubs) = RunningServices.handleDragStart(service)(position)(model.serviceArea)
+        (newServ, serSubs) = KubernetesArea.handleDragStart(service)(position)(model.serviceArea)
         newModel = {model | serviceArea = newServ, dragManager = newDrag}
     in (newModel, Cmd.batch [dragSubs, serSubs])
 
@@ -64,14 +64,14 @@ handleMouseMove:  Model -> PxPosition -> (Model, Cmd Events)
 handleMouseMove model position =
     let
         (newDrag, dragSubs) = DraggableManager.handleMouseMove(position)(model.dragManager)
-        (newServ, serSubs) = RunningServices.handleMouseMove(position)(model.serviceArea)
+        (newServ, serSubs) = KubernetesArea.handleMouseMove(position)(model.serviceArea)
     in ({model | dragManager = newDrag, serviceArea = newServ}, Cmd.batch [dragSubs, serSubs])
 
 handleMouseUp: Model -> (Model, Cmd Events)
 handleMouseUp model  =
      let
        (newDrag, dragSubs) = DraggableManager.dragOver(model.dragManager)
-       (newServ, serSubs) = RunningServices.handleDragStop(model.serviceArea)
+       (newServ, serSubs) = KubernetesArea.handleDragStop(model.serviceArea)
        newModel = {model | dragManager = newDrag, serviceArea = newServ}
      in (newModel, Cmd.batch [dragSubs, serSubs])
 
@@ -82,7 +82,7 @@ handleDimensions model dimensions =
 
 handleServiceAreaElement: Model -> Element -> (Model, Cmd Events)
 handleServiceAreaElement model element =
-    let (newServiceArea, cmd) = RunningServices.handleServiceArea(element)(model.serviceArea)
+    let (newServiceArea, cmd) = KubernetesArea.handleServiceArea(element)(model.serviceArea)
     in  ({model | serviceArea = newServiceArea },cmd)
 
 update : Events -> Model -> (Model, Cmd Events)
@@ -105,14 +105,14 @@ update msg model =
 render: Model -> Html  Events
 render model = div[class "kve"][
     ServiceTemplateContainer.render(model.templateContainer),
-    RunningServices.render(model.serviceArea),
+    KubernetesArea.render(model.serviceArea),
     DraggableManager.render(model.dragManager)
     ]
 
 subscriptions: Model -> Sub Events
 subscriptions model =
     Sub.batch[
-        RunningServices.subscriptions(model.serviceArea),
+        KubernetesArea.subscriptions(model.serviceArea),
         DraggableManager.subscriptions(model.dragManager)
     ]
 

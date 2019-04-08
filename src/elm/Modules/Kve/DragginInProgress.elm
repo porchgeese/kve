@@ -1,4 +1,4 @@
-module Modules.Kve.DraggableManager exposing (render, subscriptions,init, Model, handleMouseMove, dragStarted, dragOver,handleDimensions)
+module Modules.Kve.DragginInProgress exposing (render, subscriptions,init, Model, handleMouseMove, dragStarted, dragOver,handleDimensions)
 import Html exposing (Html,div)
 import Html.Attributes exposing (style,class)
 import Model.PxDimensions exposing (PxDimensions,toPxlStr)

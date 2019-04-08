@@ -1,10 +1,14 @@
-module  Model.PxPosition exposing (PxPosition,toTranslateStr,subtractHafDimensions, relativePosition)
+module  Model.PxPosition exposing (..)
 import Model.PxDimensions exposing (PxDimensions)
 import Model.Pixel as Pixel
 import Browser.Dom exposing (Element)
 
 type alias Coordinate = Float
 type alias PxPosition = {
+    x : Coordinate,
+    y : Coordinate
+ }
+type alias AbsolutePosition = {
     x : Coordinate,
     y : Coordinate
  }
