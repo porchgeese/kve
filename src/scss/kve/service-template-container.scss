@@ -1,0 +1,36 @@
+@import "../globals/globals";
+@import "kve-globals";
+
+
+.service-template-container {
+  .service-template-container-title {
+    text-align: center;
+    border-bottom: 1px solid lightgrey;
+}
+  padding-left: 5%;
+  padding-right: 5%;
+  border-right: 1px solid lightgrey;
+  .service-template-container-items {
+    display: grid;
+    grid-template-columns: repeat($kve-template-container-grid-size,1fr);
+    grid-column-gap: $kve-template-column-margin;
+    grid-row-gap: $kve-template-row-margin;
+    align-items: center;
+  }
+  padding-top: 10px;
+  @import "service-template";
+}
+
+
+
+.draggable-elem {
+  opacity: 0.4;
+}
+
+.draggable-elem .service-template {
+  width: 100%;
+}
+.service-template:active {
+  border-color: darkslategray;
+  transform: scale(1.05);
+}

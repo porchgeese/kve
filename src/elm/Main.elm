@@ -14,7 +14,7 @@ import Modules.Kve.ServiceTemplateContainer
 import Modules.Kve.DraggableManager as DraggableManager
 import Modules.Kve.ServiceTemplateContainer as ServiceTemplateContainer
 import Modules.Kve.ServiceTemplate as ServiceTemplate
-import Modules.Kve.ServicesArea as RunningServices
+import Modules.Kve.KubernetesServiceArea as RunningServices
 
 type alias Model = {
     templateContainer: ServiceTemplateContainer.Model,
@@ -36,7 +36,16 @@ init _ =
             {id = "3",name = "Service3"},
             {id = "4",name = "Service4"},
             {id = "5",name = "Service5"},
-            {id = "6",name = "Service6"}
+            {id = "6",name = "Service6"},
+            {id = "6",name = "Service7"},
+            {id = "6",name = "Service8"},
+            {id = "6",name = "Service9"},
+            {id = "6",name = "Service10"},
+            {id = "6",name = "Service11"},
+            {id = "6",name = "Service12"},
+            {id = "6",name = "Service13"},
+            {id = "6",name = "Service14"},
+            {id = "6",name = "Service15"}
         ]
     },
     dragManager = dragManager,
@@ -47,7 +56,7 @@ handleServiceSelected : Model -> PxPosition -> Service -> (Model, Cmd Events)
 handleServiceSelected model position service =
     let
         (newDrag, dragSubs) = DraggableManager.dragStarted(model.dragManager)(service)(position)(service.id)
-        (newServ, serSubs) = RunningServices.handleDragStart(position)(model.serviceArea)
+        (newServ, serSubs) = RunningServices.handleDragStart(service)(position)(model.serviceArea)
         newModel = {model | serviceArea = newServ, dragManager = newDrag}
     in (newModel, Cmd.batch [dragSubs, serSubs])
 
@@ -56,8 +65,7 @@ handleMouseMove model position =
     let
         (newDrag, dragSubs) = DraggableManager.handleMouseMove(position)(model.dragManager)
         (newServ, serSubs) = RunningServices.handleMouseMove(position)(model.serviceArea)
-        newModel = {model | dragManager = newDrag, serviceArea = newServ}
-    in (newModel, Cmd.batch [dragSubs, serSubs])
+    in ({model | dragManager = newDrag, serviceArea = newServ}, Cmd.batch [dragSubs, serSubs])
 
 handleMouseUp: Model -> (Model, Cmd Events)
 handleMouseUp model  =

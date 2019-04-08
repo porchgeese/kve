@@ -1,0 +1,7 @@
+.kubernetes-service-area {
+  .kubernetes-service {
+    @import "service-template";
+    width: 30px;
+    position: absolute;
+  }
+}

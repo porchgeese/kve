@@ -1,6 +1,7 @@
-module  Model.PxPosition exposing (PxPosition,toTranslateStr,subtractHafDimensions)
+module  Model.PxPosition exposing (PxPosition,toTranslateStr,subtractHafDimensions, relativePosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Model.Pixel as Pixel
+import Browser.Dom exposing (Element)
 
 type alias Coordinate = Float
 type alias PxPosition = {
@@ -10,6 +11,20 @@ type alias PxPosition = {
 
 toTranslateStr: PxPosition -> String
 toTranslateStr p = "translate(" ++ (p.x |> Pixel.toPxStr) ++ "," ++ (p.y |> Pixel.toPxStr) ++ ")"
+
+relativePosition: PxPosition -> Element -> PxPosition
+relativePosition pxPosition element =
+    let
+        squareL = element.element.x - element.viewport.x
+        squareT = element.element.y - element.viewport.y
+        relativeX = pxPosition.x - squareL
+        relativeY = pxPosition.y - squareT
+        relativePos = PxPosition(relativeX)(relativeY)
+
+    in
+        Debug.log(Debug.toString(relativePos))
+        relativePos
+
 
 subtractHafDimensions: PxPosition -> PxDimensions -> PxPosition
 subtractHafDimensions position pxDimensions =

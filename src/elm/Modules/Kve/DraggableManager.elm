@@ -61,18 +61,15 @@ handleMouseMove position model =
         Just dragInProgress ->
             (Model(model.render)(Just({dragInProgress | mouse = position})), Cmd.none)
 
-
-
-
 render : Model elem -> Html Events
 render model =
     let dimAndDip = Maybe.andThen (\dip -> Maybe.map (\dim -> (dim,dip)) dip.dimensions) model.dragInProgress
     in
       case dimAndDip of
-        Nothing -> div[][]
+        Nothing -> div[class "dragging-manager-off"][]
         Just (dimensions,dip) ->
             div[
-               class "draggable-elem",
+               class "dragging-manager",
                style "top" "0px",
                style "left" "0p",
                style "transform" ((dimensions |> subtractHafDimensions(dip.mouse) |> toTranslateStr) ++ " rotate(4deg)") ,

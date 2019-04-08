@@ -1,7 +1,7 @@
 module Modules.Kve.ServiceTemplate exposing (..)
-import Html exposing (Html,div,text)
+import Html exposing (Html,div,img)
 import Html.Events exposing (stopPropagationOn)
-import Html.Attributes exposing (class, id)
+import Html.Attributes exposing (class, id,src, draggable)
 import Json.Decode as Json exposing (..)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxPosition exposing (PxPosition)
@@ -20,4 +20,7 @@ render service = div[
     stopPropagationOn "mousedown" (decodeServiceSelected(service)),
     class  "service-template",
     id (service.id)
-    ][text(service.name)]
+    ][img[
+        src ("https://api.adorable.io/avatars/75/" ++ service.name),
+        draggable "false"
+        ][]]
