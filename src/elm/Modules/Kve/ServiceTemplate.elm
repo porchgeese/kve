@@ -8,10 +8,14 @@ import Model.PxPosition exposing (PxPosition)
 import Modules.Kve.Event.KveEvents exposing (Events(..))
 import Modules.Kve.Model.KveModel exposing (Service)
 
+
+type Events =
+    Clicked Service PxPosition
+
 decodeServiceSelected: Service -> (Json.Decoder (Events, Bool))
 decodeServiceSelected service =
     Json.map2
-     (\x y -> (ServiceSelected(service)(PxPosition(x)(y)), True))
+     (\x y -> (Clicked(service)(PxPosition(x)(y)), True))
      (field "pageX" float)
      (field "pageY" float)
 
