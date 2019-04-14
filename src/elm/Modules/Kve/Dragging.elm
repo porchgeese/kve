@@ -32,7 +32,7 @@ render elemRenderer model =
                    class "dragging-manager",
                    style "top" "0px",
                    style "left" "0p",
-                   style "transform" ((drag.dimensions |> centered(drag.mouse) |> toTranslateStr) ++ " rotate(4deg)") ,
+                   style "transform" ((drag.mouse |> centered(drag.dimensions) |> toTranslateStr)) ,
                    style "position" "absolute",
                    style "display" "block",
                    style "width" (drag.dimensions.width |> toPxlStr),

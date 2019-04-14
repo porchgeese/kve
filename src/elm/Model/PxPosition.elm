@@ -26,11 +26,20 @@ relativePosition pxPosition element =
         relativePos = PxPosition(relativeX)(relativeY)
 
     in
-        Debug.log(Debug.toString(relativePos))
-        relativePos
+        Debug.log("Relative Position")relativePos
 
-centered: PxPosition -> PxDimensions -> PxPosition
-centered position pxDimensions =
+relativeBound: Element -> PxPosition
+relativeBound element =
+    let
+        yBound = element.element.y - element.viewport.y + element.viewport.height
+        xBound = element.element.x - element.viewport.x + element.viewport.width
+    in
+        Debug.log("RelativeBound")(PxPosition(xBound)(yBound))
+
+
+
+centered: PxDimensions -> PxPosition -> PxPosition
+centered pxDimensions position  =
        PxPosition(position.x - pxDimensions.width/2)(position.y - pxDimensions.height/2)
 
 

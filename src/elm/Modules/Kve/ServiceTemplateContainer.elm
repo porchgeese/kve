@@ -51,13 +51,14 @@ getDimensions position service =
         r
             |> Result.toMaybe
             |> Maybe.map PxDimensions.fromElement
-            |> Maybe.map (DragStart(service)(position))
-            |> Maybe.withDefault (Error("Could not find service"))
+            |> Maybe.map (TcDragStart(service)(position))
+            |> Maybe.withDefault (TemplateContainerError("Could not find service"))
     )
 
-subscriptions: Model -> Sub Event
-subscriptions model =
+subscriptions: (TemplateContainerEvents -> event) -> Model -> Sub event
+subscriptions mappings model =
     Dragging.subscriptions(subscriptionMapper)(model.drag)
+    |> Sub.map mappings
 
 
 render : (TemplateContainerEvents -> event) -> Model  -> Html event
@@ -78,7 +79,7 @@ render mapper model =
 decodeServiceSelected: Service -> (Json.Decoder (TemplateContainerEvents, Bool))
 decodeServiceSelected service =
     Json.map2
-     (\x y -> (Selected(service)(PxPosition(x)(y)), True))
+     (\x y -> (TcSelected(service)(PxPosition(x)(y)), True))
      (field "pageX" float)
      (field "pageY" float)
 
@@ -92,8 +93,8 @@ renderServiceTemplate service = div[
         draggable "false"
         ][]]
 
-subscriptionMapper: Mouse.Event -> Event
+subscriptionMapper: Mouse.Event -> TemplateContainerEvents
 subscriptionMapper dragEvents =
     case dragEvents of
-        Mouse.MouseMove pxPosition -> TemplateContainer (DragProgress pxPosition)
-        Mouse.MouseUp pxPosition -> TemplateContainer (DragStop pxPosition)
+        Mouse.MouseMove pxPosition -> (TcDragProgress pxPosition)
+        Mouse.MouseUp pxPosition -> (TcDragStop pxPosition)

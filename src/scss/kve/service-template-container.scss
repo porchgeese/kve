@@ -2,6 +2,8 @@
 @import "kve-globals";
 
 
+
+
 .service-template-container {
   .service-template-container-title {
     text-align: center;
@@ -18,7 +20,22 @@
     align-items: center;
   }
   padding-top: 10px;
-  @import "service-template";
+
+  .service-template {
+    display: inline-block;
+    width: $kve-service-template-width;
+    text-align: center;
+    height: $kve-service-template-height;
+    line-height: $kve-service-template-height;
+    user-select: none;
+    cursor: move;
+    border-radius: 100%;
+    color: white;
+    text-transform: capitalize;
+    img {
+      vertical-align: middle;
+    }
+  }
 }
 
 

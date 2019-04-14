@@ -1,6 +1,9 @@
-module Modules.Kve.Event.KveEvents exposing (Event(..),TemplateContainerEvents(..))
+module Modules.Kve.Event.KveEvents exposing (
+    Event(..),TemplateContainerEvents(..),
+    KubAreaEvents(..)
+ )
 
-import Modules.Kve.Model.KveModel exposing (Service)
+import Modules.Kve.Model.KveModel exposing (Service, RegisteredService)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Browser.Dom exposing (Element)
@@ -8,15 +11,25 @@ import Browser.Dom exposing (Element)
 
 
 
+
 type TemplateContainerEvents =
-    Selected Service PxPosition |
-    DragStart Service PxPosition PxDimensions |
-    DragProgress PxPosition |
-    Dimensions PxDimensions |
-    DragStop PxPosition |
-    Error String
+    TcSelected Service PxPosition |
+    TcDragStart Service PxPosition PxDimensions |
+    TcDragProgress PxPosition |
+    TcDragStop PxPosition |
+    TemplateContainerError String
+
+type KubAreaEvents =
+    KaAdd RegisteredService |
+    KaReject Service |
+    KaSelected RegisteredService PxPosition |
+    KaStart RegisteredService PxPosition Element |
+    KaDragProgress RegisteredService PxPosition Element |
+    KaDragStop RegisteredService PxPosition Element |
+    KubernetesError String
 
 type Event =
     TemplateContainer TemplateContainerEvents |
+    KubernetesArea KubAreaEvents |
     EventError String
 

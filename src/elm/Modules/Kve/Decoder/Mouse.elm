@@ -16,7 +16,7 @@ decodeMousePosition =
 
 decodeMouseUp: Decode.Decoder Event
 decodeMouseUp =
-    Decode.map2
-      (\x y -> MouseUp(PxPosition(x)(y)))
-      (Decode.field "clientX" Decode.float)
-      (Decode.field "clientY" Decode.float)
+        Decode.map2
+          (\x y -> MouseUp(PxPosition(x)(y)))
+          (Decode.field "clientX" Decode.float)
+          (Decode.field "clientY" Decode.float)
