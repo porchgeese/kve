@@ -1,11 +1,13 @@
 module Modules.Kve.KubernetesService exposing (..)
 import Html exposing (Html,div,img)
 import Html.Attributes exposing (class, src, draggable)
-import Modules.Kve.Event.KveEvents exposing (Events(..))
+import Modules.Kve.Event.KveEvents exposing (Event(..))
 import Modules.Kve.Model.KveModel exposing (Service)
 
+type alias Model = Service
 
-render: Service -> Html Events
+
+render: Model -> Html Event
 render service = div[
     class  "kubernetes-service"
     ][img[

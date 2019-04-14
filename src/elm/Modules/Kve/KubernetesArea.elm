@@ -1,7 +1,7 @@
 module Modules.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div,text)
 import Html.Attributes exposing (class,id, style)
-import Modules.Kve.Event.KveEvents exposing (Events(..))
+import Modules.Kve.Event.KveEvents exposing (Event(..))
 import Modules.Kve.Decoder.Mouse exposing (decodeMouseUp, decodeMousePosition)
 import Model.PxPosition exposing (PxPosition,toTranslateStr,relativePosition)
 import Modules.Kve.Model.KveModel exposing (Service)
@@ -29,7 +29,7 @@ outOfView = {
    element = { x = -1, y = -1, width = -1, height = -1}
   }
 
-elementDimensions: String -> Cmd Events
+elementDimensions: String -> Cmd Event
 elementDimensions id =
     Task.attempt
         (\result ->
@@ -43,18 +43,18 @@ elementDimensions id =
 idName = "kubernetes-service-area"
 className = "kubernetes-service-area"
 
-init : (Model, Cmd Events)
+init : (Model, Cmd Event)
 init = (Model(Nothing)([])(False)(outOfView),elementDimensions(idName))
 
-handleServiceArea: Element -> Model -> (Model, Cmd Events)
+handleServiceArea: Element -> Model -> (Model, Cmd Event)
 handleServiceArea element model = ({ model | dimensions = element}, Cmd.none)
 
 
-handleDragStart: Service -> PxPosition -> Model -> (Model, Cmd Events)
+handleDragStart: Service -> PxPosition -> Model -> (Model, Cmd Event)
 handleDragStart service pxPosition model =
     ({model | ongoingDrag = Just(OngoingDrag(pxPosition)(service)), hover = False}, elementDimensions(idName))
 
-handleDragStop: Model -> (Model, Cmd Events)
+handleDragStop: Model -> (Model, Cmd Event)
 handleDragStop model =
     model.ongoingDrag
     |>
@@ -80,7 +80,7 @@ isMouseHover pxPosition model =
  in
     mouseInY && mouseInX
 
-handleMouseMove: PxPosition -> Model -> (Model, Cmd Events)
+handleMouseMove: PxPosition -> Model -> (Model, Cmd Event)
 handleMouseMove pxPosition model =
     model.ongoingDrag
     |>
@@ -90,7 +90,7 @@ handleMouseMove pxPosition model =
 
 
 
-subscriptions: Model -> Sub Events
+subscriptions: Model -> Sub Event
 subscriptions model =
        model.ongoingDrag
        |>
@@ -99,7 +99,7 @@ subscriptions model =
        |>
         Maybe.withDefault Sub.none
 
-render: Model -> Html Events
+render: Model -> Html Event
 render model = div[
     id idName,
     class className

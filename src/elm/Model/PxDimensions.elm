@@ -1,4 +1,4 @@
-module Model.PxDimensions exposing (..)
+module Model.PxDimensions exposing (PxDimensions, fromElement, toPxlStr)
 import Model.Pixel as Pixel
 import Browser.Dom exposing (Element)
 

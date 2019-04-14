@@ -29,9 +29,8 @@ relativePosition pxPosition element =
         Debug.log(Debug.toString(relativePos))
         relativePos
 
-
-subtractHafDimensions: PxPosition -> PxDimensions -> PxPosition
-subtractHafDimensions position pxDimensions =
+centered: PxPosition -> PxDimensions -> PxPosition
+centered position pxDimensions =
        PxPosition(position.x - pxDimensions.width/2)(position.y - pxDimensions.height/2)
 
 
