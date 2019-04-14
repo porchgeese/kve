@@ -1,116 +1,154 @@
 module Modules.Kve.KubernetesArea exposing (..)
-import Html exposing (Html,div,text)
-import Html.Attributes exposing (class,id, style)
-import Modules.Kve.Event.KveEvents exposing (Events(..))
-import Modules.Kve.Decoder.Mouse exposing (decodeMouseUp, decodeMousePosition)
-import Model.PxPosition exposing (PxPosition,toTranslateStr,relativePosition)
-import Modules.Kve.Model.KveModel exposing (Service)
-import Modules.Kve.KubernetesService as KubernetesService
-import Browser.Events exposing (onMouseMove,onMouseUp)
+import Html exposing (Html,div)
+import Html.Attributes exposing (class,id, style, width, height)
+import Modules.Kve.Event.KveEvents exposing (KubAreaEvents(..))
+import Model.PxPosition as PxPosition
+import Model.PxDimensions as PxDimensions
+import Modules.Kve.Model.KveModel exposing (Service, RegisteredService)
+import Browser.Dom exposing (Element)
 import Browser.Dom exposing (getElement, Element)
 import Task
-import Result
-import Maybe.Extra as MaybeE
+import Html exposing (Html,div,img)
+import Html.Attributes exposing (class, src, draggable)
+import Html.Events exposing (stopPropagationOn)
+import Json.Decode as Json exposing (..)
+import Model.PxPosition exposing (PxPosition)
+import Browser.Events exposing (onMouseMove,onMouseUp)
+import Modules.Kve.Decoder.Mouse as Mouse
+import Json.Decode as Decode
+import Time
 
-type alias OngoingDrag = {position: PxPosition, elem: Service}
-type alias ServiceInKubernetes = {position: PxPosition, service: Service}
-type alias KubeServiceDimensions = {height: Float, width: Float}
+
+
+type alias Dragging = {
+    service: RegisteredService,
+    element: Element
+ }
 type alias Model = {
-    ongoingDrag: Maybe OngoingDrag,
-    services: List ServiceInKubernetes,
-    hover: Bool,
-    dimensions: Element
+    services: List RegisteredService,
+    drag: Maybe Dragging
  }
 
-outOfView: Element
-outOfView = {
-   scene =  { width = -1, height =  -1},
-   viewport = { x = -1, y = -1, width = -1, height = -1},
-   element = { x = -1, y = -1, width = -1, height = -1}
-  }
+withService: RegisteredService -> Model -> Model
+withService service model =
+    {model | services = (service :: model.services)}
 
-elementDimensions: String -> Cmd Events
-elementDimensions id =
-    Task.attempt
-        (\result ->
-            case result of
-               Ok e -> ServiceAreaElement e
-               Err event -> EventError("Could not find dimensions for element")
-          )
-        (getElement(id))
-
-
-idName = "kubernetes-service-area"
-className = "kubernetes-service-area"
-
-init : (Model, Cmd Events)
-init = (Model(Nothing)([])(False)(outOfView),elementDimensions(idName))
-
-handleServiceArea: Element -> Model -> (Model, Cmd Events)
-handleServiceArea element model = ({ model | dimensions = element}, Cmd.none)
-
-
-handleDragStart: Service -> PxPosition -> Model -> (Model, Cmd Events)
-handleDragStart service pxPosition model =
-    ({model | ongoingDrag = Just(OngoingDrag(pxPosition)(service)), hover = False}, elementDimensions(idName))
-
-handleDragStop: Model -> (Model, Cmd Events)
-handleDragStop model =
-    model.ongoingDrag
-    |>
-    MaybeE.filter
-      (\drag -> isMouseHover(drag.position)(model.dimensions))
-    |>
-    Maybe.map
-      (\drag ->
-        ({model | services = (ServiceInKubernetes(relativePosition(drag.position)(model.dimensions))(drag.elem) :: model.services), ongoingDrag = Nothing}, Cmd.none)
-      )
-    |>
-    Maybe.withDefault ({model | ongoingDrag = Nothing}, Cmd.none)
-
-isMouseHover: PxPosition -> Element -> Bool
-isMouseHover pxPosition model =
- let
-    squareL = model.element.x - model.viewport.x
-    squareR = squareL + model.element.width
-    squareT = model.element.y - model.viewport.y
-    squareB = squareT + model.element.height
-    mouseInX    = pxPosition.x < squareR && pxPosition.x > squareL
-    mouseInY    = pxPosition.y < squareB && pxPosition.y > squareT
- in
-    mouseInY && mouseInX
-
-handleMouseMove: PxPosition -> Model -> (Model, Cmd Events)
-handleMouseMove pxPosition model =
-    model.ongoingDrag
-    |>
-    Maybe.map
-     (\drag -> ({model | hover = isMouseHover(pxPosition)(model.dimensions), ongoingDrag = Just({drag | position = pxPosition})}, Cmd.none))
-    |> Maybe.withDefault (model, Cmd.none)
-
-
-
-subscriptions: Model -> Sub Events
-subscriptions model =
-       model.ongoingDrag
-       |>
-       Maybe.map
-        (\_ -> Sub.batch [onMouseMove decodeMousePosition, onMouseUp decodeMouseUp])
-       |>
-        Maybe.withDefault Sub.none
-
-render: Model -> Html Events
-render model = div[
-    id idName,
-    class className
-    ](
-        model.services
-        |>
-        List.map
-            (\service -> div[
-                class "kubernetes-service",
-                style "transform" (toTranslateStr(service.position))
-                ][KubernetesService.render(service.service)])
+startDrag: RegisteredService -> PxPosition -> Cmd KubAreaEvents
+startDrag registeredService pxPosition =
+    getElement("kubernetes-service-area")
+    |> Task.attempt  (\r ->
+      r
+      |> Result.toMaybe
+      |> Maybe.map (\elem -> KaStart registeredService pxPosition elem)
+      |> Maybe.withDefault (KubernetesError "Could not find element")
     )
+dragStopped: RegisteredService -> PxPosition -> Model -> Model
+dragStopped registeredService pxPosition model =
+    {model | drag = Nothing}
+
+
+withNewDrag: RegisteredService -> PxPosition -> Element -> Model -> Model
+withNewDrag registeredService pxPosition element model =
+    {model | drag = Just (Dragging(registeredService)(element))}
+
+withMovedService: RegisteredService -> PxPosition -> Element -> Model -> Model
+withMovedService registeredService pxPosition element model =
+    let
+      newService = {registeredService | position = PxPosition.relativePosition(pxPosition)(element)}
+      withOutSer = model.services |> List.filter (\s -> s.id /= registeredService.id)
+    in
+      {model | services = newService :: withOutSer}
+
+getTime: Task.Task String Int
+getTime =
+    Time.now
+    |> Task.mapError (\_ -> "Error")
+    |> Task.map (Time.posixToMillis)
+
+
+
+
+dropService: Service -> PxPosition.PxPosition -> PxDimensions.PxDimensions -> Cmd KubAreaEvents
+dropService service pxPosition pxDimensions =
+    getElement("kubernetes-service-area")
+    |> Task.mapError (\_ -> "")
+    |> Task.andThen (\elem -> getTime |> (Task.map (\t -> (elem, t))))
+    |> Task.attempt (\r ->
+        r
+        |> Result.toMaybe
+        |> Maybe.map (\elemAndId ->
+            let (elem, id) = elemAndId
+            in
+            (PxPosition.relativePosition(pxPosition)(elem), PxPosition.relativeBound(elem), id)
+        )
+        |> Maybe.map (\posAndBound ->
+            let
+                (position, bound,id) = posAndBound
+                containsX = position.x > 0 && position.x < bound.x
+                containsY = position.y > 0 && position.y < bound.y
+            in (
+             if (containsX && containsY) then
+               KaAdd(RegisteredService(id)(service)(position)(pxDimensions))
+             else
+               KaReject service
+             )
+        )
+        |> Maybe.withDefault (KubernetesError "Could not find element")
+    )
+
+
+
+subscriptions: (KubAreaEvents -> event) -> Model -> Sub event
+subscriptions mapping model =
+    model.drag
+        |> Maybe.map (\drag -> [
+            onMouseMove (Mouse.decodeMousePosition |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping),
+            onMouseUp (Mouse.decodeMouseUp |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping)]
+        )
+        |> Maybe.withDefault []
+        |> Sub.batch
+
+
+render: (KubAreaEvents -> event) -> Model -> Html event
+render mapper model = div[
+    id "kubernetes-service-area",
+    class "kubernetes-service-area"
+    ]
+     (model.services
+        |> List.map (\service ->
+            div[
+                class "kubernetes-service-container",
+                style "width" (service.dimensions.width |> PxDimensions.toPxlStr),
+                style "height" (service.dimensions.height |> PxDimensions.toPxlStr),
+                style "transform" ( service.position |>  PxPosition.centered(service.dimensions) |> PxPosition.toTranslateStr )
+            ][renderRegisteredService(service)]
+    )
+    )
+    |> Html.map mapper
+
+-----
+renderRegisteredService: RegisteredService -> Html KubAreaEvents
+renderRegisteredService service = div[
+    class  "kubernetes-service"
+    ][img[
+        src ("https://robohash.org/" ++ service.service.name ++ ".png"),
+        stopPropagationOn "mousedown" (decodeServiceSelected(service)),
+        draggable "false"
+        ][]]
+
+decodeServiceSelected: RegisteredService -> (Json.Decoder (KubAreaEvents, Bool))
+decodeServiceSelected service =
+    Json.map2
+     (\x y -> (KaSelected(service)(PxPosition(x)(y)), True))
+     (field "pageX" float)
+     (field "pageY" float)
+
+subscriptionMapper: Dragging -> Mouse.Event -> KubAreaEvents
+subscriptionMapper drag dragEvents  =
+ case dragEvents of
+     Mouse.MouseMove pxPosition -> (KaDragProgress drag.service pxPosition drag.element)
+     Mouse.MouseUp pxPosition -> (KaDragStop drag.service pxPosition drag.element)
+------
+
 
 
