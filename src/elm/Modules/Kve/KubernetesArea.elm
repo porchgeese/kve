@@ -131,7 +131,7 @@ renderRegisteredService: RegisteredService -> Html KubAreaEvents
 renderRegisteredService service = div[
     class  "kubernetes-service"
     ][img[
-        src ("https://api.adorable.io/avatars/75/" ++ service.service.name),
+        src ("https://robohash.org/" ++ service.service.name ++ ".png"),
         stopPropagationOn "mousedown" (decodeServiceSelected(service)),
         draggable "false"
         ][]]

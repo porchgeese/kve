@@ -8,10 +8,15 @@
   width: 100%;
   border-right: 1px solid lightgrey;
 
+  .dragging-manager-off {
+    display: none;
+  }
+
   .service-template-container-title {
     text-align: center;
     border-bottom: 1px solid lightgrey;
   }
+
   .service-template-container-items {
     display: grid;
     width: 100%;
@@ -24,11 +29,12 @@
 
   .service-template {
     display: inline-block;
-    width: $kve-service-template-width;
+    width: 100%;
     text-align: center;
     user-select: none;
     cursor: move;
-    border-radius: 100%;
+    border-radius: 40%;
+    overflow: hidden;
     color: white;
     text-transform: capitalize;
     img {

@@ -1,11 +1,15 @@
 .kubernetes-service-area {
   .kubernetes-service-container {
     position: absolute;
-    .kubernetes-service {
-      width: 100%;
-    }
-    .kubernetes-service img{
-      width: 100%;
-    }
+  }
+
+  .kubernetes-service {
+    width: 100%;
+    border-radius: 40%;
+    overflow: hidden;
+  }
+
+  .kubernetes-service img{
+    width: 100%;
   }
 }

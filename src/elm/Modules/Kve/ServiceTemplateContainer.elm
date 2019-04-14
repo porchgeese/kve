@@ -89,7 +89,7 @@ renderServiceTemplate service = div[
     class  "service-template",
     id (service.id)
     ][img[
-        src ("https://api.adorable.io/avatars/75/" ++ service.name),
+        src ("https://robohash.org/" ++ service.name ++ ".png"),
         draggable "false"
         ][]]
 

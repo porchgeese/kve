@@ -1,7 +1,6 @@
 .kve {
   @import "service-template-container";
   @import "kubernetes-service-area";
-  @import "dragging-manager.scss";
   display: grid;
   grid-template-columns: 15% 85%;
   width: 100%;
