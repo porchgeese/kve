@@ -1,32 +1,31 @@
 @import "../globals/globals";
 @import "kve-globals";
 
-
-
-
 .service-template-container {
+  padding-top: 10px;
+  padding-left: 5%;
+  padding-right: 5%;
+  width: 100%;
+  border-right: 1px solid lightgrey;
+
   .service-template-container-title {
     text-align: center;
     border-bottom: 1px solid lightgrey;
-}
-  padding-left: 5%;
-  padding-right: 5%;
-  border-right: 1px solid lightgrey;
+  }
   .service-template-container-items {
     display: grid;
+    width: 100%;
     grid-template-columns: repeat($kve-template-container-grid-size,1fr);
     grid-column-gap: $kve-template-column-margin;
     grid-row-gap: $kve-template-row-margin;
     align-items: center;
+    padding-top: 5%;
   }
-  padding-top: 10px;
 
   .service-template {
     display: inline-block;
     width: $kve-service-template-width;
     text-align: center;
-    height: $kve-service-template-height;
-    line-height: $kve-service-template-height;
     user-select: none;
     cursor: move;
     border-radius: 100%;
@@ -34,11 +33,10 @@
     text-transform: capitalize;
     img {
       vertical-align: middle;
+      width: 100%;
     }
   }
 }
-
-
 
 .draggable-elem {
   opacity: 0.4;

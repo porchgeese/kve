@@ -1,6 +1,6 @@
 module Modules.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div)
-import Html.Attributes exposing (class,id, style)
+import Html.Attributes exposing (class,id, style, width, height)
 import Modules.Kve.Event.KveEvents exposing (KubAreaEvents(..))
 import Model.PxPosition as PxPosition
 import Model.PxDimensions as PxDimensions
@@ -117,7 +117,9 @@ render mapper model = div[
      (model.services
         |> List.map (\service ->
             div[
-                class "kubernetes-service",
+                class "kubernetes-service-container",
+                style "width" (service.dimensions.width |> PxDimensions.toPxlStr),
+                style "height" (service.dimensions.height |> PxDimensions.toPxlStr),
                 style "transform" ( service.position |>  PxPosition.centered(service.dimensions) |> PxPosition.toTranslateStr )
             ][renderRegisteredService(service)]
     )
