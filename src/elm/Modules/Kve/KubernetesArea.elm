@@ -1,10 +1,10 @@
 module Modules.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div)
-import Html.Attributes exposing (class,id, style, width, height)
+import Html.Attributes exposing (class,id, style)
 import Modules.Kve.Event.KveEvents exposing (KubAreaEvents(..))
 import Model.PxPosition as PxPosition
 import Model.PxDimensions as PxDimensions
-import Modules.Kve.Model.KveModel exposing (Service, RegisteredService)
+import Modules.Kve.Model.KveModel exposing (ServiceTemplate, NewService, RegisteredService)
 import Browser.Dom exposing (Element)
 import Browser.Dom exposing (getElement, Element)
 import Task
@@ -17,7 +17,6 @@ import Browser.Events exposing (onMouseMove,onMouseUp)
 import Modules.Kve.Decoder.Mouse as Mouse
 import Json.Decode as Decode
 import Time
-
 
 
 type alias Dragging = {
@@ -33,6 +32,10 @@ withService: RegisteredService -> Model -> Model
 withService service model =
     {model | services = (service :: model.services)}
 
+withServices: List RegisteredService -> Model -> Model
+withServices newServices model =
+    {model | services = (newServices ++ model.services)}
+
 startDrag: RegisteredService -> PxPosition -> Cmd KubAreaEvents
 startDrag registeredService pxPosition =
     getElement("kubernetes-service-area")
@@ -43,13 +46,17 @@ startDrag registeredService pxPosition =
       |> Maybe.withDefault (KubernetesError "Could not find element")
     )
 dragStopped: RegisteredService -> PxPosition -> Model -> Model
-dragStopped registeredService pxPosition model =
+dragStopped _ _ model =
     {model | drag = Nothing}
 
 
 withNewDrag: RegisteredService -> PxPosition -> Element -> Model -> Model
-withNewDrag registeredService pxPosition element model =
+withNewDrag registeredService _ element model =
     {model | drag = Just (Dragging(registeredService)(element))}
+
+withUpdatedService: {old: RegisteredService, new: RegisteredService} -> Model -> Model
+withUpdatedService update model =
+    {model | services = Debug.log("New Service")(update.new) :: (model.services |> List.filter (\s -> s.id /= update.old.id))}
 
 withMovedService: RegisteredService -> PxPosition -> Element -> Model -> Model
 withMovedService registeredService pxPosition element model =
@@ -59,36 +66,25 @@ withMovedService registeredService pxPosition element model =
     in
       {model | services = newService :: withOutSer}
 
-getTime: Task.Task String Int
-getTime =
-    Time.now
-    |> Task.mapError (\_ -> "Error")
-    |> Task.map (Time.posixToMillis)
 
-
-
-
-dropService: Service -> PxPosition.PxPosition -> PxDimensions.PxDimensions -> Cmd KubAreaEvents
+dropService: ServiceTemplate -> PxPosition.PxPosition -> PxDimensions.PxDimensions -> Cmd KubAreaEvents
 dropService service pxPosition pxDimensions =
     getElement("kubernetes-service-area")
     |> Task.mapError (\_ -> "")
-    |> Task.andThen (\elem -> getTime |> (Task.map (\t -> (elem, t))))
     |> Task.attempt (\r ->
         r
         |> Result.toMaybe
-        |> Maybe.map (\elemAndId ->
-            let (elem, id) = elemAndId
-            in
-            (PxPosition.relativePosition(pxPosition)(elem), PxPosition.relativeBound(elem), id)
+        |> Maybe.map (\elem ->
+            (PxPosition.relativePosition(pxPosition)(elem), PxPosition.relativeBound(elem))
         )
         |> Maybe.map (\posAndBound ->
             let
-                (position, bound,id) = posAndBound
+                (position, bound) = posAndBound
                 containsX = position.x > 0 && position.x < bound.x
                 containsY = position.y > 0 && position.y < bound.y
             in (
              if (containsX && containsY) then
-               KaAdd(RegisteredService(id)(service)(position)(pxDimensions))
+               KaAdd(NewService(service.id)(service.kind)(position)(pxDimensions))
              else
                KaReject service
              )
@@ -131,10 +127,11 @@ renderRegisteredService: RegisteredService -> Html KubAreaEvents
 renderRegisteredService service = div[
     class  "kubernetes-service"
     ][img[
-        src ("https://robohash.org/" ++ service.service.name ++ ".png"),
+        src ("https://robohash.org/" ++ service.name ++ ".png"),
         stopPropagationOn "mousedown" (decodeServiceSelected(service)),
         draggable "false"
         ][]]
+
 
 decodeServiceSelected: RegisteredService -> (Json.Decoder (KubAreaEvents, Bool))
 decodeServiceSelected service =

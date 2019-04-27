@@ -7,7 +7,7 @@ module Modules.Kve.ServiceTemplateContainer exposing (
 import Elements.Title as Title
 import Html exposing (Html,div)
 import Html.Attributes exposing (class)
-import Modules.Kve.Model.KveModel exposing (Service)
+import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
 import Modules.Kve.Event.KveEvents exposing (Event)
 import Html exposing (Html,div,img)
 import Html.Events exposing (stopPropagationOn)
@@ -17,7 +17,7 @@ import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Model.PxDimensions as PxDimensions
 import Modules.Kve.Event.KveEvents exposing (TemplateContainerEvents(..), Event(..))
-import Modules.Kve.Model.KveModel exposing (Service)
+import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
 import Modules.Kve.Dragging as Dragging
 import Modules.Kve.Decoder.Mouse as Mouse
 import Browser.Dom exposing (getElement)
@@ -25,8 +25,8 @@ import Task
 
 type alias Model = {
         title: String,
-        services: List Service,
-        drag: Dragging.Model Service
+        services: List ServiceTemplate,
+        drag: Dragging.Model ServiceTemplate
  }
 
 withDragPosition : PxPosition -> Model   -> Model
@@ -36,7 +36,7 @@ withDragPosition pxPosition model  =
     |> Maybe.map (\newDrag -> {model | drag = Dragging.Model(Just newDrag)})
     |> Maybe.withDefault model
 
-withDrag: Service -> PxPosition -> PxDimensions -> Model -> Model
+withDrag: ServiceTemplate -> PxPosition -> PxDimensions -> Model -> Model
 withDrag service pxPosition pxDimensions model =
     {model | drag = Dragging.Model(Just(Dragging.DragInProgress(service)(pxPosition)(pxDimensions)))}
 
@@ -44,7 +44,7 @@ withDragStopped : Model -> Model
 withDragStopped model =
     {model | drag = Dragging.Model(Nothing)}
 
-getDimensions: PxPosition -> Service -> Cmd TemplateContainerEvents
+getDimensions: PxPosition -> ServiceTemplate -> Cmd TemplateContainerEvents
 getDimensions position service =
     getElement(service.id)
     |> Task.attempt (\r ->
@@ -76,20 +76,20 @@ render mapper model =
 
 -----
 
-decodeServiceSelected: Service -> (Json.Decoder (TemplateContainerEvents, Bool))
+decodeServiceSelected: ServiceTemplate -> (Json.Decoder (TemplateContainerEvents, Bool))
 decodeServiceSelected service =
     Json.map2
      (\x y -> (TcSelected(service)(PxPosition(x)(y)), True))
      (field "pageX" float)
      (field "pageY" float)
 
-renderServiceTemplate: Service -> Html TemplateContainerEvents
+renderServiceTemplate: ServiceTemplate -> Html TemplateContainerEvents
 renderServiceTemplate service = div[
     stopPropagationOn "mousedown" (decodeServiceSelected(service)),
     class  "service-template",
     id (service.id)
     ][img[
-        src ("https://robohash.org/" ++ service.name ++ ".png"),
+        src ("https://robohash.org/" ++ service.id ++ ".png"),
         draggable "false"
         ][]]
 
