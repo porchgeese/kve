@@ -2,14 +2,11 @@ module Modules.Kve.Main exposing (init,view,update,subscriptions)
 import Browser
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
-import Modules.Kve.ServiceTemplateContainer
 import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
-import Modules.Kve.Event.KveEvents exposing (Event(..),TemplateContainerEvents(..), KubAreaEvents(..),HttpEvents(..))
+import Modules.Kve.Event.KveEvents exposing (Event(..), KubAreaEvents(..),HttpEvents(..))
 import Platform.Sub
-import Modules.Kve.ServiceTemplateContainer
 import Modules.Kve.KubernetesArea as KubernetesArea
-import Modules.Kve.ServiceTemplateContainer as ServiceTemplateContainer
-import Modules.Kve.Dragging as Dragging
+import Modules.Kve.ServiceTemplate.ServiceTemplateContainer as ServiceTemplateContainer
 import Modules.Kve.Http.Project as ProjectCalls
 import Model.PxPosition as Position
 
@@ -39,7 +36,7 @@ init _ = ({
             ServiceTemplate("14")("Service14")(""),
             ServiceTemplate("15")("Service15")("")
         ],
-        drag = Dragging.Model(Nothing)
+        dragging = Nothing
     },
     kubernetesArea = {
         services = [],
@@ -50,27 +47,22 @@ init _ = ({
 
 render: Model -> Html  Event
 render model = div[class "kve"][
-    ServiceTemplateContainer.render(TemplateContainer)(model.templateContainer),
+    ServiceTemplateContainer.render(model.templateContainer) |> Html.map TemplateContainer,
     KubernetesArea.render(KubernetesArea)(model.kubernetesArea)
  ]
 
 update: Event -> Model -> (Model, Cmd Event)
 update event model =
     case event of
-       TemplateContainer (TcSelected service position) ->
-        (model, ServiceTemplateContainer.getDimensions(position)(service) |> Cmd.map TemplateContainer)
-       TemplateContainer (TcDragStart service position dimensions) ->
-        ({model | templateContainer = (model.templateContainer |> ServiceTemplateContainer.withDrag service position dimensions)}, Cmd.none)
-       TemplateContainer (TcDragProgress position) ->
-        ({model | templateContainer = model.templateContainer |> ServiceTemplateContainer.withDragPosition position }, Cmd.none)
-       TemplateContainer (TcDragStop position) ->
-        (
-         {model | templateContainer = (model.templateContainer |> ServiceTemplateContainer.withDragStopped) },
-         model.templateContainer.drag.dragging
-            |> Maybe.map (\drag -> KubernetesArea.dropService(drag.element)(position)(drag.dimensions))
-            |> Maybe.withDefault Cmd.none
-            |> Cmd.map KubernetesArea
-        )
+       TemplateContainer (ServiceTemplateContainer.DragEnd pos dim elem) ->
+         let (serviceTemplate, cmds) = ServiceTemplateContainer.update(model.templateContainer)
+         ({model | templateContainer = serviceTemplate}, Cmd.batch [
+            cmds |> Cmd.map TemplateContainer,
+            KubernetesArea.dropService(elem)(pos)(dim) |> Cmd.map KubernetesArea
+         ])
+       TemplateContainer event ->
+         let (serviceTemplate, cmds) = ServiceTemplateContainer.update event model.templateContainer
+         ({model | templateContainer = serviceTemplate}, cmds |> Cmd.map TemplateContainer)
        KubernetesArea (KaAdd service) ->
            (model, ProjectCalls.saveService(service) |> Cmd.map HttpEvents)
        KubernetesArea (KaSelected service position) ->
@@ -92,7 +84,7 @@ update event model =
 subscriptions: Model -> Sub Event
 subscriptions model =
     Sub.batch[
-        ServiceTemplateContainer.subscriptions(TemplateContainer)(model.templateContainer),
+        ServiceTemplateContainer.subscriptions(model.templateContainer) |> Sub.map TemplateContainer,
         KubernetesArea.subscriptions(KubernetesArea)(model.kubernetesArea)
     ]
 view: Model -> Browser.Document Event

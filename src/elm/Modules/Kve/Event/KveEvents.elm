@@ -1,8 +1,8 @@
 module Modules.Kve.Event.KveEvents exposing (
-    Event(..),TemplateContainerEvents(..),
+    Event(..),
     KubAreaEvents(..), HttpEvents(..)
  )
-
+import Modules.Kve.ServiceTemplate.ServiceTemplateContainer.
 import Modules.Kve.Model.KveModel exposing (ServiceTemplate, RegisteredService,NewService, RegisteredProject)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
@@ -12,12 +12,7 @@ import Browser.Dom exposing (Element)
 
 
 
-type TemplateContainerEvents =
-    TcSelected ServiceTemplate PxPosition |
-    TcDragStart ServiceTemplate PxPosition PxDimensions |
-    TcDragProgress PxPosition |
-    TcDragStop PxPosition |
-    TemplateContainerError String
+
 
 
 type KubAreaEvents =

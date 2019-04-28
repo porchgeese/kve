@@ -98,7 +98,7 @@ subscriptions: (KubAreaEvents -> event) -> Model -> Sub event
 subscriptions mapping model =
     model.drag
         |> Maybe.map (\drag -> [
-            onMouseMove (Mouse.decodeMousePosition |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping),
+            onMouseMove (Mouse.decodeMouseMove |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping),
             onMouseUp (Mouse.decodeMouseUp |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping)]
         )
         |> Maybe.withDefault []
