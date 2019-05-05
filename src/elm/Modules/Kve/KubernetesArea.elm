@@ -1,7 +1,6 @@
 module Modules.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div)
 import Html.Attributes exposing (class,id, style)
-import Modules.Kve.Event.KveEvents exposing (KubAreaEvents(..))
 import Model.PxPosition as PxPosition
 import Model.PxDimensions as PxDimensions
 import Modules.Kve.Model.KveModel exposing (ServiceTemplate, NewService, RegisteredService)
@@ -16,7 +15,7 @@ import Model.PxPosition exposing (PxPosition)
 import Browser.Events exposing (onMouseMove,onMouseUp)
 import Modules.Kve.Decoder.Mouse as Mouse
 import Json.Decode as Decode
-import Time
+
 
 
 type alias Dragging = {
@@ -28,6 +27,15 @@ type alias Model = {
     drag: Maybe Dragging
  }
 
+type Event =
+    KaAdded NewService |
+    KaReject ServiceTemplate |
+    KaSelected RegisteredService PxPosition |
+    KaStart RegisteredService PxPosition Element |
+    KaDragProgress RegisteredService PxPosition Element |
+    KaDragStop RegisteredService PxPosition Element |
+    KubernetesError String
+
 withService: RegisteredService -> Model -> Model
 withService service model =
     {model | services = (service :: model.services)}
@@ -36,7 +44,7 @@ withServices: List RegisteredService -> Model -> Model
 withServices newServices model =
     {model | services = (newServices ++ model.services)}
 
-startDrag: RegisteredService -> PxPosition -> Cmd KubAreaEvents
+startDrag: RegisteredService -> PxPosition -> Cmd Event
 startDrag registeredService pxPosition =
     getElement("kubernetes-service-area")
     |> Task.attempt  (\r ->
@@ -50,9 +58,7 @@ dragStopped _ _ model =
     {model | drag = Nothing}
 
 
-withNewDrag: RegisteredService -> PxPosition -> Element -> Model -> Model
-withNewDrag registeredService _ element model =
-    {model | drag = Just (Dragging(registeredService)(element))}
+
 
 withUpdatedService: {old: RegisteredService, new: RegisteredService} -> Model -> Model
 withUpdatedService update model =
@@ -67,7 +73,7 @@ withMovedService registeredService pxPosition element model =
       {model | services = newService :: withOutSer}
 
 
-dropService: ServiceTemplate -> PxPosition.PxPosition -> PxDimensions.PxDimensions -> Cmd KubAreaEvents
+dropService: ServiceTemplate -> PxPosition.PxPosition -> PxDimensions.PxDimensions -> Cmd Event
 dropService service pxPosition pxDimensions =
     getElement("kubernetes-service-area")
     |> Task.mapError (\_ -> "")
@@ -84,7 +90,7 @@ dropService service pxPosition pxDimensions =
                 containsY = position.y > 0 && position.y < bound.y
             in (
              if (containsX && containsY) then
-               KaAdd(NewService(service.id)(service.kind)(position)(pxDimensions))
+               KaAdded(NewService(service.id)(service.kind)(position)(pxDimensions))
              else
                KaReject service
              )
@@ -94,19 +100,50 @@ dropService service pxPosition pxDimensions =
 
 
 
-subscriptions: (KubAreaEvents -> event) -> Model -> Sub event
-subscriptions mapping model =
+subscriptions: Model -> Sub Event
+subscriptions model =
     model.drag
         |> Maybe.map (\drag -> [
-            onMouseMove (Mouse.decodeMouseMove |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping),
-            onMouseUp (Mouse.decodeMouseUp |> Decode.map (subscriptionMapper(drag)) |> Decode.map mapping)]
+            onMouseMove (Mouse.decodeMouseMove |> Decode.map (\px -> KaDragProgress drag.service px drag.element)) ,
+            onMouseUp (Mouse.decodeMouseUp |> Decode.map (\px -> KaDragStop drag.service px drag.element))
+            ]
         )
         |> Maybe.withDefault []
         |> Sub.batch
+-----
+renderRegisteredService: RegisteredService -> Html Event
+renderRegisteredService service = div[
+    class  "kubernetes-service"
+    ][img[
+        src ("https://robohash.org/" ++ service.name ++ ".png"),
+        stopPropagationOn "mousedown" (decodeServiceSelected(service)),
+        draggable "false"
+        ][]]
 
 
-render: (KubAreaEvents -> event) -> Model -> Html event
-render mapper model = div[
+decodeServiceSelected: RegisteredService -> (Json.Decoder (Event, Bool))
+decodeServiceSelected service =
+    Json.map2
+     (\x y -> (KaSelected(service)(PxPosition(x)(y)), True))
+     (field "pageX" float)
+     (field "pageY" float)
+
+--------------------------------------------------------------------------------
+
+update: Event -> Model -> (Model, Cmd Event)
+update event model =
+    case event of
+        KaSelected service position             -> (model, startDrag(service)(position))
+        KaStart service _ elem                  -> ({model | drag = Just (Dragging(service)(elem))}, Cmd.none)
+        KaDragProgress service position element -> (withMovedService(service)(position)(element)(model), Cmd.none)
+        KaDragStop service position _           -> (dragStopped(service)(position)(model), Cmd.none)
+        KaAdded _                               -> (model, Cmd.none)
+        KaReject _                              -> (model, Cmd.none)
+        KubernetesError _                       -> (model, Cmd.none)
+
+
+render: Model -> Html event
+render model = div[
     id "kubernetes-service-area",
     class "kubernetes-service-area"
     ]
@@ -120,32 +157,9 @@ render mapper model = div[
             ][renderRegisteredService(service)]
     )
     )
-    |> Html.map mapper
-
------
-renderRegisteredService: RegisteredService -> Html KubAreaEvents
-renderRegisteredService service = div[
-    class  "kubernetes-service"
-    ][img[
-        src ("https://robohash.org/" ++ service.name ++ ".png"),
-        stopPropagationOn "mousedown" (decodeServiceSelected(service)),
-        draggable "false"
-        ][]]
 
 
-decodeServiceSelected: RegisteredService -> (Json.Decoder (KubAreaEvents, Bool))
-decodeServiceSelected service =
-    Json.map2
-     (\x y -> (KaSelected(service)(PxPosition(x)(y)), True))
-     (field "pageX" float)
-     (field "pageY" float)
 
-subscriptionMapper: Dragging -> Mouse.Event -> KubAreaEvents
-subscriptionMapper drag dragEvents  =
- case dragEvents of
-     Mouse.MouseMove pxPosition -> (KaDragProgress drag.service pxPosition drag.element)
-     Mouse.MouseUp pxPosition -> (KaDragStop drag.service pxPosition drag.element)
-------
 
 
 

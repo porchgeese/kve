@@ -3,7 +3,7 @@ import Browser
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
 import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
-import Modules.Kve.Event.KveEvents exposing (Event(..), KubAreaEvents(..),HttpEvents(..))
+import Modules.Kve.Event.KveEvents exposing (Event(..), HttpEvents(..))
 import Platform.Sub
 import Modules.Kve.KubernetesArea as KubernetesArea
 import Modules.Kve.ServiceTemplate.ServiceTemplateContainer as ServiceTemplateContainer
@@ -63,16 +63,6 @@ update event model =
        TemplateContainer event ->
          let (serviceTemplate, cmds) = ServiceTemplateContainer.update event model.templateContainer
          ({model | templateContainer = serviceTemplate}, cmds |> Cmd.map TemplateContainer)
-       KubernetesArea (KaAdd service) ->
-           (model, ProjectCalls.saveService(service) |> Cmd.map HttpEvents)
-       KubernetesArea (KaSelected service position) ->
-           (model, KubernetesArea.startDrag(service)(position) |> Cmd.map KubernetesArea)
-       KubernetesArea (KaStart service position elem) ->
-           ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.withNewDrag(service)(position)(elem) }, Cmd.none)
-       KubernetesArea (KaDragProgress service position element) ->
-           ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.withMovedService service position element}, Cmd.none)
-       KubernetesArea (KaDragStop service position elem ) ->
-           ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.dragStopped service position}, ProjectCalls.updateServicePosition(service)(Position.relativePosition(position)(elem)) |> Cmd.map HttpEvents)
        HttpEvents (ServiceCreated service) ->
            ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.withService(service)}, Cmd.none)
        HttpEvents (ProjectFetched project) ->

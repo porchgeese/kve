@@ -1,5 +1,5 @@
 module Modules.Kve.ServiceTemplate.ServiceTemplateContainer exposing (
-    render,update,subscriptions,TemplateContainerEvent,TemplateContainerEvent(..),
+    render,update,subscriptions,TemplateContainerEvent(..),
     Model
  )
 import Elements.Title as Title
@@ -52,6 +52,7 @@ withDrag service pxPosition pxDimensions model =
 withDragStopped : Model -> Model
 withDragStopped model =
     {model | dragging = Nothing}
+
 
 
 toCmd : TemplateContainerEvent -> Cmd TemplateContainerEvent
@@ -116,7 +117,7 @@ renderServiceTemplate service = div[
         draggable "false"
         ][]]
 
-render : Model  -> Html event
+render : Model  -> Html TemplateContainerEvent
 render  model =
     div[class "service-template-container"][
         div [class "service-template-container-title"][Title.view({title = model.title}) ],
