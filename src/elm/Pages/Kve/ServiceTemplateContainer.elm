@@ -1,4 +1,4 @@
-module Modules.Kve.ServiceTemplateContainer exposing (
+module Pages.Kve.ServiceTemplateContainer exposing (
     render,Model,subscriptions,
     withDragPosition, withDragStopped,
     withDrag,
@@ -7,8 +7,7 @@ module Modules.Kve.ServiceTemplateContainer exposing (
 import Elements.Title as Title
 import Html exposing (Html,div)
 import Html.Attributes exposing (class)
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
-import Modules.Kve.Event.KveEvents exposing (Event)
+import Pages.Kve.Model.KveModel exposing (ServiceTemplate)
 import Html exposing (Html,div,img)
 import Html.Events exposing (stopPropagationOn)
 import Html.Attributes exposing (class, id,src, draggable)
@@ -16,10 +15,10 @@ import Json.Decode as Json exposing (..)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Model.PxDimensions as PxDimensions
-import Modules.Kve.Event.KveEvents exposing (TemplateContainerEvents(..), Event(..))
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
-import Modules.Kve.Dragging as Dragging
-import Modules.Kve.Decoder.Mouse as Mouse
+import Pages.Kve.Event.KveEvents exposing (TemplateContainerEvents(..))
+import Pages.Kve.Model.KveModel exposing (ServiceTemplate)
+import Pages.Kve.Dragging as Dragging
+import Pages.Kve.Decoder.Mouse as Mouse
 import Browser.Dom exposing (getElement)
 import Task
 

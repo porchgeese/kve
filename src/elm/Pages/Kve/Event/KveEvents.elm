@@ -1,9 +1,9 @@
-module Modules.Kve.Event.KveEvents exposing (
-    Event(..),TemplateContainerEvents(..),
+module Pages.Kve.Event.KveEvents exposing (
+    TemplateContainerEvents(..),
     KubAreaEvents(..), HttpEvents(..)
  )
 
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate, RegisteredService,NewService, RegisteredProject)
+import Pages.Kve.Model.KveModel exposing (ServiceTemplate, RegisteredService,NewService, RegisteredProject)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Browser.Dom exposing (Element)
@@ -36,10 +36,4 @@ type HttpEvents =
     ServiceCreationFailed NewService |
     ProjectFetched RegisteredProject |
     ProjectFetchedFailed
-
-type Event =
-    TemplateContainer TemplateContainerEvents |
-    KubernetesArea KubAreaEvents |
-    HttpEvents HttpEvents|
-    EventError String
 

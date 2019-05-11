@@ -1,10 +1,19 @@
-@import "kve/kve";
+@import "pages/kve/kve";
 @import "globals/globals";
+@import "pages/login/login";
+@import "pages/projects/projects";
 
 body {
   font-family: $roboto-slab;
   font-weight: normal;
   min-height: 100vh;
   display: flex;
+}
+#main {
+  width: 100%;
+  margin: auto;
+}
+body{
+  margin: 0;
 }
 

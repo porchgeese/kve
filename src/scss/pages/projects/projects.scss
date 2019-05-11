@@ -1,0 +1,43 @@
+@import "../../globals/globals";
+
+#projects {
+  margin: auto;
+  width: 100%;
+  padding: 5%;
+
+  ul {
+    list-style: none;
+  }
+
+  li {
+    line-height: 3em;
+    padding: 1.1em 1.6em;
+    background-color: whitesmoke;
+    color: darkslategray;
+    margin-bottom: 5px;
+    transition: all .1s ease-in;
+    grid-template-columns: 50% 50%;
+    display: grid;
+    .name {
+      display: inline-block;
+    }
+    .actions {
+      display: inline-block;
+      font-size: 1.5em ;
+      text-align: right;
+    }
+    i {
+      margin: 0 0.3em;
+      &:hover {
+        color: black;
+      }
+    }
+
+    &:hover {
+      position: relative;
+      line-height: 3.5em;
+      transform: scale(1.01);
+      cursor: pointer;
+    }
+  }
+}

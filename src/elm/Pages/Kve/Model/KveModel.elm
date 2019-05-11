@@ -1,4 +1,4 @@
-module Modules.Kve.Model.KveModel exposing (..)
+module Pages.Kve.Model.KveModel exposing (..)
 
 import Model.PxPosition as PxPosition
 import Model.PxDimensions as PxDimensions

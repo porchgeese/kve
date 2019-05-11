@@ -1,0 +1,50 @@
+@import "../../globals/globals";
+
+#login {
+  padding: 100px;
+  margin: 50px auto;
+  width: 30%;
+  text-align: center;
+  border: 9px solid whitesmoke;
+  font-size: 7pt;
+  height: 30%;
+  .header{
+    text-align: center;
+    margin-bottom: 55px;
+
+    img {
+      width: 50%;
+    }
+  }
+  .body {
+    .submit {
+      margin-top: 20px;
+    }
+    p {
+      text-transform: lowercase;
+    }
+    input{
+      background-color: transparent;
+      text-align: center;
+      border: 0;
+      border-bottom: 1px solid black;
+      &:focus {
+        outline: none;
+      }
+    }
+    button  {
+      border: 0;
+      height: 38px;
+      width: 45%;
+      margin-top: 15px;
+      background-color: $accent-color;
+      cursor: pointer;
+      color: white;
+      font-size: 10pt;
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+}

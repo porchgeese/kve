@@ -26,6 +26,16 @@ module.exports = {
                         name: '[name].[ext]'
                     }
                 }
+            },
+            {
+                test: /\.png$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'file-loader',
+                    options: {
+                        name: '[name].[ext]'
+                    }
+                }
             }
         ]
     },
@@ -37,6 +47,7 @@ module.exports = {
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
         compress: true,
-        port: 9000
+        port: 9000,
+        historyApiFallback: true
     }
 };

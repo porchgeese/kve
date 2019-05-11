@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/Porchgeese/kve#readme",
   "dependencies": {
-    "elm-webpack-loader": "^5.0.0"
+    "elm-webpack-loader": "^5.0.0",
+    "ionicons": "^4.5.6"
   },
   "devDependencies": {
     "css-loader": "^2.1.1",

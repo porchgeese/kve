@@ -1,10 +1,10 @@
-module Modules.Kve.KubernetesArea exposing (..)
+module Pages.Kve.KubernetesArea exposing (..)
 import Html exposing (Html,div)
 import Html.Attributes exposing (class,id, style)
-import Modules.Kve.Event.KveEvents exposing (KubAreaEvents(..))
+import Pages.Kve.Event.KveEvents exposing (KubAreaEvents(..))
 import Model.PxPosition as PxPosition
 import Model.PxDimensions as PxDimensions
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate, NewService, RegisteredService)
+import Pages.Kve.Model.KveModel exposing (ServiceTemplate, NewService, RegisteredService)
 import Browser.Dom exposing (Element)
 import Browser.Dom exposing (getElement, Element)
 import Task
@@ -14,7 +14,7 @@ import Html.Events exposing (stopPropagationOn)
 import Json.Decode as Json exposing (..)
 import Model.PxPosition exposing (PxPosition)
 import Browser.Events exposing (onMouseMove,onMouseUp)
-import Modules.Kve.Decoder.Mouse as Mouse
+import Pages.Kve.Decoder.Mouse as Mouse
 import Json.Decode as Decode
 import Time
 

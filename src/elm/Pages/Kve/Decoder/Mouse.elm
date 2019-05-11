@@ -1,4 +1,4 @@
-module Modules.Kve.Decoder.Mouse exposing (decodeMousePosition, decodeMouseUp, Event(..))
+module Pages.Kve.Decoder.Mouse exposing (decodeMousePosition, decodeMouseUp, Event(..))
 import Json.Decode as Decode
 import Model.PxPosition exposing (PxPosition)
 

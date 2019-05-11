@@ -1,15 +1,17 @@
-module Modules.Kve.Http.Project exposing (saveService, fetchProject, updateServicePosition)
+module Pages.Kve.Http.Project exposing (saveService, fetchProject, updateServicePosition)
 
-import Modules.Kve.Model.KveModel exposing (NewService)
+import Pages.Kve.Model.KveModel exposing (NewService)
 import Http as Http
 import Json.Encode
 import Json.Decode as Decode
-import Modules.Kve.Event.KveEvents as KveEvents
-import Modules.Kve.Model.KveModel exposing (RegisteredService,RegisteredProject)
+import Pages.Kve.Event.KveEvents as KveEvents
+import Pages.Kve.Model.KveModel exposing (RegisteredService,RegisteredProject)
 import Model.PxPosition exposing (PxPosition)
 import Model.PxDimensions exposing (PxDimensions)
 import Http as Http
 import Json.Encode as Encode
+
+type alias ProjectId = String
 
 handleServiceCreationResult: NewService -> Result Http.Error RegisteredService -> KveEvents.HttpEvents
 handleServiceCreationResult service result =
@@ -79,24 +81,24 @@ newServiceEncoder service =
 
 
 
-fetchProject: Cmd (KveEvents.HttpEvents)
-fetchProject = Http.get {
-    url = "http://127.0.0.1:8089/projects/0ddd193a-8dbd-4cea-8540-954e17673e36",
+fetchProject: ProjectId -> Cmd (KveEvents.HttpEvents)
+fetchProject id = Http.get {
+    url = "http://127.0.0.1:8089/projects/" ++ id ,
     expect =  Http.expectJson(handleFetchProjectResult)(registeredProjectDecoder)
  }
 
 
-saveService: NewService -> Cmd (KveEvents.HttpEvents)
-saveService service = Http.post {
-    url = "http://127.0.0.1:8089/projects/0ddd193a-8dbd-4cea-8540-954e17673e36/services",
+saveService: ProjectId ->  NewService -> Cmd (KveEvents.HttpEvents)
+saveService id service = Http.post {
+    url = "http://127.0.0.1:8089/projects/" ++ id ++ "/services",
     expect = Http.expectJson(handleServiceCreationResult(service))(registeredServiceDecoder),
     body = Http.jsonBody (newServiceEncoder(service))
  }
 
-updateServicePosition: RegisteredService -> PxPosition -> Cmd (KveEvents.HttpEvents)
-updateServicePosition service pxPosition = Http.request {
+updateServicePosition:  ProjectId ->  RegisteredService -> PxPosition -> Cmd (KveEvents.HttpEvents)
+updateServicePosition id service pxPosition = Http.request {
         method = "PATCH",
-        url = "http://127.0.0.1:8089/projects/0ddd193a-8dbd-4cea-8540-954e17673e36/services/" ++ service.id ++ "/position",
+        url = "http://127.0.0.1:8089/projects/" ++ id ++ "/services/" ++ service.id ++ "/position",
         expect = Http.expectJson(handleUpdatedCreationResult(service))(registeredServiceDecoder),
         body = Http.jsonBody (Encode.object [("position", positionEncoder(pxPosition))]),
         headers = [],

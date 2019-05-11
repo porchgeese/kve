@@ -1,25 +1,34 @@
-module Modules.Kve.Main exposing (init,view,update,subscriptions)
+module Pages.Kve.Page exposing (init,view,update,subscriptions, Model, Event, render)
 import Browser
 import Html exposing (Html, div)
 import Html.Attributes exposing (class)
-import Modules.Kve.ServiceTemplateContainer
-import Modules.Kve.Model.KveModel exposing (ServiceTemplate)
-import Modules.Kve.Event.KveEvents exposing (Event(..),TemplateContainerEvents(..), KubAreaEvents(..),HttpEvents(..))
+import Pages.Kve.ServiceTemplateContainer
+import Pages.Kve.Model.KveModel exposing (ServiceTemplate)
+import Pages.Kve.Event.KveEvents exposing (TemplateContainerEvents(..), KubAreaEvents(..),HttpEvents(..))
 import Platform.Sub
-import Modules.Kve.ServiceTemplateContainer
-import Modules.Kve.KubernetesArea as KubernetesArea
-import Modules.Kve.ServiceTemplateContainer as ServiceTemplateContainer
-import Modules.Kve.Dragging as Dragging
-import Modules.Kve.Http.Project as ProjectCalls
+import Pages.Kve.ServiceTemplateContainer
+import Pages.Kve.KubernetesArea as KubernetesArea
+import Pages.Kve.ServiceTemplateContainer as ServiceTemplateContainer
+import Pages.Kve.Dragging as Dragging
+import Pages.Kve.Http.Project as ProjectCalls
 import Model.PxPosition as Position
 
 type alias Model = {
     templateContainer: ServiceTemplateContainer.Model,
-    kubernetesArea : KubernetesArea.Model
+    kubernetesArea : KubernetesArea.Model,
+        project: String
+
  }
 
-init : () -> (Model, Cmd Event)
-init _ = ({
+
+type Event =
+    TemplateContainer TemplateContainerEvents |
+    KubernetesArea KubAreaEvents |
+    HttpEvents HttpEvents|
+    EventError String
+
+init : String -> (Model, Cmd Event)
+init projectId = ({
     templateContainer = {
         title = "Kve - Visual Editor",
         services = [
@@ -44,9 +53,9 @@ init _ = ({
     kubernetesArea = {
         services = [],
         drag = Nothing
-    }
-
- }, ProjectCalls.fetchProject |> Cmd.map HttpEvents)
+    },
+    project = projectId
+ }, ProjectCalls.fetchProject(projectId) |> Cmd.map HttpEvents)
 
 render: Model -> Html  Event
 render model = div[class "kve"][
@@ -72,7 +81,7 @@ update event model =
             |> Cmd.map KubernetesArea
         )
        KubernetesArea (KaAdd service) ->
-           (model, ProjectCalls.saveService(service) |> Cmd.map HttpEvents)
+           (model, ProjectCalls.saveService(model.project)(service) |> Cmd.map HttpEvents)
        KubernetesArea (KaSelected service position) ->
            (model, KubernetesArea.startDrag(service)(position) |> Cmd.map KubernetesArea)
        KubernetesArea (KaStart service position elem) ->
@@ -80,7 +89,7 @@ update event model =
        KubernetesArea (KaDragProgress service position element) ->
            ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.withMovedService service position element}, Cmd.none)
        KubernetesArea (KaDragStop service position elem ) ->
-           ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.dragStopped service position}, ProjectCalls.updateServicePosition(service)(Position.relativePosition(position)(elem)) |> Cmd.map HttpEvents)
+           ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.dragStopped service position}, ProjectCalls.updateServicePosition(model.project)(service)(Position.relativePosition(position)(elem)) |> Cmd.map HttpEvents)
        HttpEvents (ServiceCreated service) ->
            ({model | kubernetesArea = model.kubernetesArea |> KubernetesArea.withService(service)}, Cmd.none)
        HttpEvents (ProjectFetched project) ->
@@ -100,10 +109,4 @@ view model = {
              title = "KVE",
              body = [render(model)]
             }
-main = Browser.document {
-    init = init,
-    view = view ,
-    update = update,
-    subscriptions = subscriptions
-  }
 

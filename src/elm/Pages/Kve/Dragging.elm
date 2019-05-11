@@ -1,4 +1,4 @@
-module Modules.Kve.Dragging exposing (render, subscriptions, Model, DragInProgress)
+module Pages.Kve.Dragging exposing (render, subscriptions, Model, DragInProgress)
 import Html exposing (Html,div)
 import Html.Attributes exposing (style,class)
 import Model.PxDimensions exposing (PxDimensions,toPxlStr)
@@ -6,7 +6,7 @@ import Model.PxPosition exposing (PxPosition,toTranslateStr,centered)
 import Browser.Events exposing (onMouseMove,onMouseUp)
 import Json.Decode as Decode
 
-import Modules.Kve.Decoder.Mouse as Mouse
+import Pages.Kve.Decoder.Mouse as Mouse
 
 type alias DragInProgress elem = {element: elem, mouse: PxPosition, dimensions: PxDimensions}
 type alias Model elem = {
