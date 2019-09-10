@@ -1,0 +1,28 @@
+@import "../../globals/globals";
+
+#not-found {
+  margin: auto;
+  .logo {
+    width: 10%;
+    text-align: center;
+    margin: auto;
+    animation: 4s move-around infinite running;
+  }
+  img {
+    width: 100%;
+  }
+  .description {
+    margin: auto;
+    text-align: center;
+    text-transform: uppercase;
+  }
+}
+
+@keyframes move-around {
+  0% {transform : translate(-100px, 0) rotateY(0)}          //initial
+  45% {transform : translate(100px) rotateY(0)}             //move left 25%
+  50% {transform : translate(100px, 0px) rotateY(180deg)}   //rotate 5%
+  95% {transform: translate(-100px, 0) rotateY(180deg)}      //move right
+  100% {transform : translate(-100px, 0) rotateY(0deg)}    //rotate 5%
+}
+

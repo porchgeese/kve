@@ -24,8 +24,7 @@ type alias Model = {
 type Event =
     TemplateContainer TemplateContainerEvents |
     KubernetesArea KubAreaEvents |
-    HttpEvents HttpEvents|
-    EventError String
+    HttpEvents HttpEvents
 
 init : String -> (Model, Cmd Event)
 init projectId = ({

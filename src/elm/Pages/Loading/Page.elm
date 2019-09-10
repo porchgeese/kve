@@ -1,6 +1,6 @@
 module Pages.Loading.Page exposing (render)
 
-import Html exposing (div,img, input,p, button,h2,text,Html)
+import Html exposing (div,text,Html)
 
 render: Html event
 render =

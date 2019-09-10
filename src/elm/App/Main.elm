@@ -14,11 +14,12 @@ import Pages.NotFound.Page as NotFoundPage
 import Pages.Loading.Page as LoadingPage
 import Pages.Projects.Page as ProjectPage
 import Task
+
 type Event =
-    Kve KvePage.Event |
-    Login LoginPage.Event |
-    Projects ProjectPage.Event |
-    Show Route.Route |
+    KvePageEvent KvePage.Event |
+    LoginPageEvent LoginPage.Event |
+    ProjectsPageEvent ProjectPage.Event |
+    Navigation Route.Route |
     None
 
 type alias Model = {
@@ -36,12 +37,15 @@ main = Browser.application ({
     subscriptions =  subscriptions ,
     onUrlRequest = (\x ->
         case x of
-            Browser.Internal url-> (url |> Route.parseRoute |> Show)
+            Browser.Internal url-> (url |> Route.parseRoute |> Navigation)
             Browser.External _ -> None
     ),
-    onUrlChange = (\url -> url |> Route.parseRoute |> Show)
+    onUrlChange = (\url -> url |> Route.parseRoute |> Navigation)
  })
 
+init : Int -> Url.Url -> Nav.Key -> (Model, Cmd Event)
+init _ url key =
+    (Model(Nothing)(Nothing)(Nothing)(key)(Route.Loading), Task.succeed(Navigation (Route.parseRoute(url))) |> Task.perform identity)
 
 subscriptions: Model -> Sub Event
 subscriptions model =
@@ -49,7 +53,7 @@ subscriptions model =
         |> Maybe.map ( \kveModel ->
             kveModel
             |> KvePage.subscriptions
-            |> Sub.map (\e -> Kve e)
+            |> Sub.map (\e -> KvePageEvent e)
         )
         |> Maybe.withDefault Sub.none
 
@@ -57,50 +61,30 @@ subscriptions model =
 update: Event -> Model -> (Model, Cmd Event)
 update event model =
      case Debug.log ("Event")(event) of
-        Show (Route.ProjectRoute project) ->
+        Navigation (Route.ProjectRoute project) ->
             KvePage.init (project)
                 |> Tuple.mapFirst (\newKve -> {model | kve = Just newKve, route = Route.ProjectRoute project , auth = Just ()} )
-                |> Tuple.mapSecond (Cmd.map Kve)
-        Show Route.NotFound ->
+                |> Tuple.mapSecond (Cmd.map KvePageEvent)
+        Navigation Route.NotFound ->
              ({ model | route = Route.NotFound}, Cmd.none)
-        Show Route.LoginRoute ->
+        Navigation Route.LoginRoute ->
            ({ model | route = Route.LoginRoute}, Cmd.none)
-        Show Route.ProjectsRoute ->
+        Navigation Route.ProjectsRoute ->
             ProjectPage.init()
             |> Tuple.mapFirst (\newProjects -> {model | projects = Just(newProjects) , route = Route.ProjectsRoute})
-            |> Tuple.mapSecond (Cmd.map Projects)
-        Show a ->
-           (model, Cmd.none)
-        Kve kveEvent ->
-            model.kve
-                |> Maybe.map (\kveModel ->
-                    kveModel
-                        |> KvePage.update(kveEvent)
-                        |> Tuple.mapFirst (\newModel -> ({model | kve = Just newModel}))
-                        |> Tuple.mapSecond (Cmd.map Kve )
-                )
-                |> Maybe.withDefault (model, Cmd.none )
-        Login LoginPage.LoginSuccessful ->
+            |> Tuple.mapSecond (Cmd.map ProjectsPageEvent)
+        Navigation unknown ->
+           ({model | route = unknown}, Cmd.none)
+        LoginPageEvent LoginPage.LoginSuccessful ->
              (model, Navigation.pushUrl(model.key)("/projects"))
-        Projects (ProjectPage.ProjectSelected id) ->
-             (model, Navigation.pushUrl(model.key)("/projects/" ++ id)) --fix
-        Projects projectEvent ->
-              model.projects
-              |> Maybe.map (\projects ->
-                ProjectPage.update(projectEvent)(projects)
-                |> Tuple.mapFirst(\newModel -> {model | projects = Just newModel})
-                |> Tuple.mapSecond(Cmd.map Projects)
-              )
-              |> Maybe.withDefault (model, Cmd.none)
+        ProjectsPageEvent (ProjectPage.ProjectSelected id) ->
+             (model, Navigation.pushUrl(model.key)("/projects/" ++ id))
+        ProjectsPageEvent projectEvent ->
+            (model, projectEvent) |> delegate(\m -> m.projects)(ProjectPage.update)(\new -> {model | projects = new})(ProjectsPageEvent)
+        KvePageEvent kveEvent ->
+            (model, kveEvent) |> delegate(\m -> m.kve)(KvePage.update)(\new -> ({model | kve = new}))(KvePageEvent)
         None ->
             (model, Cmd.none)
-
-
-init : Int -> Url.Url -> Nav.Key -> (Model, Cmd Event)
-init _ url key =
-    (Model(Nothing)(Nothing)(Nothing)(key)(Route.Loading), Task.succeed(Show (Route.parseRoute(url))) |> Task.perform identity)
-
-
 
 render: Model -> Browser.Document Event
 render model = {
@@ -117,30 +101,41 @@ render model = {
  }
 
 renderLoginPage: Model -> Html Event
-renderLoginPage model = LoginPage.render () |> Html.map (\e -> Login e)
+renderLoginPage _ = LoginPage.render () |> Html.map (\e -> LoginPageEvent e)
 
 renderProjectsPage: Model -> Html Event
 renderProjectsPage model =
     model.projects
-    |> Maybe.map ( \m -> ProjectPage.render m  |> Html.map Projects )
+    |> Maybe.map ( \m -> ProjectPage.render m  |> Html.map ProjectsPageEvent )
     |> Maybe.withDefault LoadingPage.render
 
 renderProjectPage: Model -> Html Event
 renderProjectPage model =
     Maybe.map2
-            (\_  kve -> KvePage.render(kve) |> Html.map (\e -> Kve e))
+            (\_  kve -> KvePage.render(kve) |> Html.map (\e -> KvePageEvent e))
             (model.auth)
             (model.kve)
     |> Maybe.withDefault (renderLoadingPage(model))
 
 renderNotFoundPage: Model -> Html Event
-renderNotFoundPage model =
+renderNotFoundPage _ =
     NotFoundPage.render
 
 renderLoadingPage: Model -> Html Event
-renderLoadingPage model =
+renderLoadingPage _ =
         LoadingPage.render
 
+delegate: (Model -> Maybe model) -> (msg -> model -> (model, Cmd msg) ) -> (Maybe model -> Model) -> (msg -> Event) -> (Model, msg) -> (Model, Cmd Event)
+delegate subModelGetter modelUpdate modelMapper eventMapper (model, event) =
+    subModelGetter(model)
+    |> Maybe.map ( \m ->
+        m
+        |> modelUpdate(event)
+        |> Tuple.mapFirst Just
+        |> Tuple.mapFirst modelMapper
+        |> Tuple.mapSecond (Cmd.map eventMapper)
+    )
+    |> Maybe.withDefault (model, Cmd.none)
 
 
 
